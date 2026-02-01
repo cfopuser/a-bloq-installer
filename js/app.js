@@ -215,11 +215,20 @@ async function checkAccounts() {
     updateStatusBadge('account-status', `<span class="material-symbols-rounded">hourglass_top</span> בודק...`, '');
     
     try {
-        // In dev mode, use 'no_acc' or 'has_acc' preset
-        let s = await adb.shell("dumpsys account");
+        // שימוש בפקודה קלה יותר מ-dumpsys
+        let s = await adb.shell("cmd account list");
         let output = await readAll(s);
         
-        const accountRegex = /Account {name=([^,]+), type=([^}]+)}/g;
+        // אם הפקודה cmd לא נתמכת (מכשירים ישנים מאוד), ננסה dumpsys כגיבוי
+        if (!output && !window.DEV_MODE) {
+            s = await adb.shell("dumpsys account");
+            output = await readAll(s);
+        }
+
+        console.log("Accounts output:", output); // לבדיקה בקונסול
+
+        // Regex שתופס פורמטים שונים של חשבונות
+        const accountRegex = /Account\s*\{name=([^,]+),\s*type=([^}]+)\}/gi;
         let matches = [...output.matchAll(accountRegex)];
 
         if (matches.length === 0) {
@@ -229,19 +238,22 @@ async function checkAccounts() {
             showToast("המכשיר מוכן להתקנה");
         } else {
             updateStatusBadge('account-status', `<span class="material-symbols-rounded">error</span> נמצאו ${matches.length} חשבונות`, 'error');
-            let listHtml = '<b>חשבונות שיש להסיר:</b><ul>';
+            
+            let listHtml = '<b>יש להסיר את החשבונות הבאים מהגדרות המכשיר:</b><ul style="margin-top:10px;">';
             matches.forEach(match => {
-                listHtml += `<li>${match[1]} (${match[2]})</li>`;
+                const name = match[1];
+                const type = match[2].split('.').pop(); // מציג רק את סוג החשבון (למשל google)
+                listHtml += `<li><strong>${name}</strong> (${type})</li>`;
             });
             listHtml += '</ul>';
+            
             accountListDiv.innerHTML = listHtml;
             document.getElementById('btn-next-acc').disabled = true;
             appState.accountsClean = false;
-            showToast(`נמצאו ${matches.length} חשבונות פעילים. אנא הסר אותם.`);
         }
     } catch (e) {
-        showToast("שגיאה בבדיקה");
-        console.error(e);
+        showToast("שגיאה בבדיקת חשבונות");
+        console.error("Account check error:", e);
     }
 }
 
@@ -443,9 +455,18 @@ async function readAll(stream) {
     let res = "";
     try {
         while (true) {
-            const { done, value } = await stream.read();
-            if (done) break;
-            res += decoder.decode(value);
+            // ב-WebADB משתמשים ב-receive() כדי לקבל הודעה מהמכשיר
+            let msg = await stream.receive();
+
+            if (msg.cmd === "WRTE") {
+                // הודעת WRTE מכילה נתונים
+                res += decoder.decode(msg.data);
+                // חובה לשלוח OKAY חזרה כדי שהמכשיר ימשיך לשלוח את שאר הנתונים
+                await stream.send("OKAY");
+            } else if (msg.cmd === "CLSE") {
+                // הודעת CLSE אומרת שהמכשיר סיים להעביר נתונים
+                break;
+            }
         }
     } catch (e) {
         console.warn("Stream reading interrupted", e);
