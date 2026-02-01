@@ -1,2 +1,3 @@
 # a-bloq-installer
-a program for installing the mdm manger A-Bloq with instruction and language support
+a web installer to install a bloq mdm solution,
+its built to be  a static site on github pages.
