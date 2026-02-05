@@ -607,8 +607,8 @@ async function runInstallation() {
 
             if(!apkBlob) {
                 // This fetches the file from the /apk/ directory on your web server
-                const resp = await fetch('apk/update.apk');
-                if(!resp.ok) throw new Error("קובץ ה-APK המקומי (apk/update.apk) חסר.");
+                const resp = await fetch('apk/normal.apk');
+                if(!resp.ok) throw new Error("קובץ ה-APK המקומי (apk/normal.apk) חסר.");
                 apkBlob = await resp.blob();
             }
         }
