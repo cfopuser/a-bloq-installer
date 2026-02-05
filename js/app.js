@@ -157,7 +157,7 @@ window.enableDevMode = function() {
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-// --- REAL LOGIC (Now cleaner because it relies on the injected object) ---
+// --- REAL LOGIC ---
 
 // --- IMPROVED ERROR MAPPING ---
 const ADB_ERRORS = {
@@ -185,7 +185,6 @@ const ACCOUNT_PKG_MAP = {
 async function connectAdb() {
     try {
         if (window.DEV_MODE) {
-            // In Dev Mode, we swap the real ADB library for our Mock Class
             webusb = new MockADB(); 
             adb = await webusb.connectAdb("mock::device");
         } else {
@@ -194,11 +193,9 @@ async function connectAdb() {
         }
 
         if(adb) {
-            // Note: In dev mode, this shell command will pause waiting for the 'model' preset
             let shell = await adb.shell("getprop ro.product.model");
             let model = await readAll(shell);
             
-            // Cleanup model string (remove prefix if present from getprop)
             model = model.replace('ro.product.model:', '').trim();
             if(!model) model = "Generic Android";
 
@@ -216,36 +213,6 @@ async function connectAdb() {
         showToast("שגיאה בחיבור: " + e.message);
         console.error(e);
     }
-}
-
-/**
- * Helper to map account types to Icons, Colors, and Readable Names
- */
-function getAccountVisuals(type) {
-    // Normalize type string
-    const t = type.toLowerCase();
-
-    if (t.includes('google')) {
-        return { label: 'Google Account', icon: 'cloud', class: 'acc-google' };
-    }
-    if (t.includes('samsung') || t.includes('osp')) {
-        return { label: 'Samsung Account', icon: 'smartphone', class: 'acc-samsung' };
-    }
-    if (t.includes('whatsapp')) {
-        return { label: 'WhatsApp', icon: 'chat', class: 'acc-whatsapp' };
-    }
-    if (t.includes('exchange') || t.includes('outlook') || t.includes('office')) {
-        return { label: 'Exchange/Outlook', icon: 'mail', class: 'acc-exchange' };
-    }
-    if (t.includes('telegram')) {
-        return { label: 'Telegram', icon: 'send', class: 'acc-telegram' };
-    }
-    if (t.includes('facebook') || t.includes('meta')) {
-        return { label: 'Facebook', icon: 'thumb_up', class: 'acc-google' }; // Reusing generic class
-    }
-    
-    // Default fallback
-    return { label: type, icon: 'account_circle', class: '' };
 }
 
 // --- NEW FUNCTIONS FOR BETA FEATURE ---
@@ -285,7 +252,6 @@ async function runAccountBypass() {
             // Determine package to disable
             let pkgToDisable = ACCOUNT_PKG_MAP[type];
             
-            // Heuristic: if map not found, try to use the type itself if it looks like a package
             if (!pkgToDisable && type.includes('.')) {
                 pkgToDisable = type; 
             }
@@ -304,18 +270,16 @@ async function runAccountBypass() {
 
         // --- NEW AUTO-PROCEED LOGIC ---
         if (appState.disabledPackages.length > 0) {
-            showToast(`בוצעה השבתה ל-${appState.disabledPackages.length} רכיבים. ממשיך לעדכון...`);
+            showToast(`בוצעה השבתה ל-${appState.disabledPackages.length} רכיבים. ממשיך להתקנה...`);
             
-            // 1. Force the state to clean so navigateTo allows the transition
             appState.accountsClean = true; 
             
-            // 2. Wait a brief moment so the user sees the status change, then navigate
             setTimeout(() => {
                 navigateTo('page-update', 3);
             }, 1500); 
         } else {
             showToast("לא נמצאו חשבונות מתאימים להשבתה אוטומטית.");
-            checkAccounts(); // Fallback to standard check if nothing was done
+            checkAccounts(); 
         }
         
 
@@ -344,36 +308,91 @@ async function restoreAccounts() {
     log(" שיחזור חשבונות הסתיים.", 'success');
 }
 
+const ICONS = {
+    google: '<svg viewBox="0 0 24 24"><path d="M21.35,11.1H12.18V13.83H18.69C18.36,17.64 15.19,19.27 12.19,19.27C8.36,19.27 5,16.25 5,12C5,7.9 8.2,4.73 12.2,4.73C15.29,4.73 17.1,6.7 17.1,6.7L19,4.72C19,4.72 16.56,2 12.1,2C6.42,2 2.03,6.8 2.03,12C2.03,17.05 6.16,22 12.25,22C17.6,22 21.5,18.33 21.5,12.91C21.5,11.76 21.35,11.1 21.35,11.1V11.1Z" /></svg>',
+    samsung: '<svg viewBox="0 0 24 24"><path d="M16.94 13.91C16.82 13.91 16.58 13.91 16.34 13.88C15.93 13.82 15.65 13.72 15.35 13.56L15.42 12.94C15.69 13.09 16.03 13.21 16.39 13.27C16.58 13.3 16.73 13.3 16.8 13.3C17.5 13.3 17.81 12.99 17.81 12.55C17.81 12.08 17.51 11.85 16.64 11.66L16.23 11.58C14.79 11.27 13.92 10.74 13.92 9.7C13.92 8.44 14.94 7.55 16.68 7.55C17.38 7.55 18.06 7.66 18.66 7.89L18.45 8.5C17.96 8.32 17.39 8.21 16.77 8.21C16.14 8.21 15.82 8.5 15.82 8.9C15.82 9.32 16.15 9.54 16.98 9.72L17.38 9.8C18.94 10.14 19.72 10.72 19.72 11.73C19.72 13.11 18.63 13.91 16.94 13.91M11.6 13.84H9.72V7.63H13.68V8.24H11.6V10.35H13.39V10.96H11.6V13.84M22 10.73C22 14.63 17.53 17.8 12 17.8C6.47 17.8 2 14.63 2 10.73C2 6.83 6.47 3.66 12 3.66C17.53 3.66 22 6.83 22 10.73Z" /></svg>',
+    whatsapp: '<svg viewBox="0 0 24 24"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.03 14.69 2 12.04 2M12.05 3.66C14.25 3.66 16.31 4.51 17.87 6.07C19.42 7.63 20.28 9.7 20.28 11.92C20.28 16.46 16.58 20.15 12.04 20.15C10.56 20.15 9.11 19.76 7.85 19L7.55 18.83L4.43 19.65L5.26 16.61L5.06 16.29C4.24 15 3.8 13.47 3.8 11.91C3.81 7.37 7.5 3.66 12.05 3.66Z" /></svg>',
+    twitter: '<svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>',
+    facebook: '<svg viewBox="0 0 24 24"><path d="M12 2.04C6.5 2.04 2 6.53 2 12.06C2 17.06 5.66 21.21 10.44 21.96V14.96H7.9V12.06H10.44V9.85C10.44 7.34 11.93 5.96 14.15 5.96C15.21 5.96 16.16 6.05 16.16 6.05V8.51H15.03C13.79 8.51 13.4 9.28 13.4 10.06V12.06H16.17L15.73 14.96H13.4V21.96C18.19 21.21 21.84 17.06 21.84 12.06C21.84 6.53 17.35 2.04 12 2.04Z" /></svg>',
+    telegram: '<svg viewBox="0 0 24 24"><path d="M9.78 18.65L10.06 14.42L17.74 7.5C18.08 7.19 17.67 7.04 17.22 7.31L7.74 13.3L3.64 12C2.76 11.75 2.75 11.14 3.84 10.7L19.81 4.54C20.54 4.21 21.24 4.72 20.96 5.84L18.24 18.65C18.05 19.56 17.5 19.78 16.74 19.36L12.6 16.3L10.61 18.23C10.38 18.46 10.19 18.65 9.78 18.65Z" /></svg>',
+    xiaomi: '<svg viewBox="0 0 24 24"><path d="M14.5,5.5H5.5V18.5H9.5V9.5H14.5V18.5H18.5V9.4C18.5,7.2 16.7,5.5 14.5,5.5M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2Z" /></svg>',
+    microsoft: '<svg viewBox="0 0 24 24"><path d="M2,2H11V11H2V2M2,13H11V22H2V13M13,2H22V11H13V2M13,13H22V22H13V13Z" /></svg>',
+    tiktok: '<svg viewBox="0 0 24 24"><path d="M12.5 3v13.6c0 2.2-1.8 4-4 4s-4-1.8-4-4 1.8-4 4-4c.4 0 .8.1 1.1.2V9.3c-.4 0-.7-.1-1.1-.1-4.1 0-7.5 3.4-7.5 7.5s3.4 7.5 7.5 7.5 7.5-3.4 7.5-7.5V7c1.5 1.1 3.3 1.7 5.2 1.7V5.3c-2.4 0-4.5-1.1-5.9-2.9l-1.3.6z"/></svg>'
+};
+
+/**
+ * Helper to map account types to Icons, Colors, and Readable Names
+ */
+function getAccountVisuals(type) {
+    const t = type.toLowerCase();
+
+    // 1. Google
+    if (t.includes('google')) {
+        return { label: 'Google Account', html: ICONS.google, class: 'acc-google' };
+    }
+    // 2. Samsung / OSP
+    if (t.includes('samsung') || t.includes('osp')) {
+        return { label: 'Samsung Account', html: ICONS.samsung, class: 'acc-samsung' };
+    }
+    // 3. WhatsApp
+    if (t.includes('whatsapp')) {
+        return { label: 'WhatsApp', html: ICONS.whatsapp, class: 'acc-whatsapp' };
+    }
+    // 4. X / Twitter
+    if (t.includes('twitter') || t.includes('com.twitter')) {
+        return { label: 'X (Twitter)', html: ICONS.twitter, class: 'acc-twitter' };
+    }
+    // 5. Facebook / Meta
+    if (t.includes('facebook') || t.includes('meta')) {
+        return { label: 'Facebook', html: ICONS.facebook, class: 'acc-facebook' };
+    }
+    // 6. Telegram
+    if (t.includes('telegram')) {
+        return { label: 'Telegram', html: ICONS.telegram, class: 'acc-telegram' };
+    }
+    // 7. Xiaomi
+    if (t.includes('xiaomi')) {
+        return { label: 'Xiaomi Account', html: ICONS.xiaomi, class: 'acc-xiaomi' };
+    }
+    // 8. TikTok
+    if (t.includes('tiktok') || t.includes('musical')) {
+        return { label: 'TikTok', html: ICONS.tiktok, class: 'acc-tiktok' };
+    }
+    // 9. Exchange / Microsoft
+    if (t.includes('exchange') || t.includes('outlook') || t.includes('office')) {
+        return { label: 'Exchange/Outlook', html: ICONS.microsoft, class: 'acc-exchange' };
+    }
+    
+    // Fallback for Unknown Accounts -> Cloud Icon (Material Symbol)
+    return { 
+        label: type, 
+        html: `<span class="material-symbols-rounded">cloud</span>`, 
+        class: 'acc-unknown' 
+    };
+}
 
 async function checkAccounts() {
     const accountListDiv = document.getElementById('account-list');
+    const bypassBtn = document.getElementById('btn-bypass-trigger');
     accountListDiv.innerHTML = ''; 
 
     if(!adb) { showToast("ADB לא מחובר"); return; }
     
     updateStatusBadge('account-status', `<span class="material-symbols-rounded">hourglass_top</span> בודק...`, '');
+    bypassBtn.style.display = 'none'; // Hide bypass button while checking
     
     try {
-        // Attempt 1: 'cmd account list' (Cleaner output on newer Androids)
         let s = await adb.shell("cmd account list");
         let output = await readAll(s);
         
-        // Attempt 2: 'dumpsys account' (Fallback for older devices or restricted permissions)
         if (!output || output.trim().length === 0 || (!output.includes('Account {') && !window.DEV_MODE)) {
-            console.log("Falling back to dumpsys...");
             s = await adb.shell("dumpsys account");
             output = await readAll(s);
         }
 
-        console.log("Raw Accounts output:", output); 
-
-        // Improved Regex to capture {name=..., type=...} accurately
-        // Handles spaces after commas and varies formats
         const accountRegex = /Account\s*\{name=([^,]+),\s*type=([^}]+)\}/gi;
         let matches = [...output.matchAll(accountRegex)];
         
-        // Filter out "duplicate" entries if dumpsys returns multiple sections
-        // We create a Set based on unique "name+type" to avoid showing the same account twice
         const uniqueAccounts = [];
         const seen = new Set();
 
@@ -391,8 +410,8 @@ async function checkAccounts() {
             updateStatusBadge('account-status', `<span class="material-symbols-rounded">check_circle</span> מכשיר נקי`, 'success');
             document.getElementById('btn-next-acc').disabled = false;
             appState.accountsClean = true;
+            bypassBtn.style.display = 'none'; // Ensure hidden if clean
             
-            // Show nice "Clean" state in list area
             accountListDiv.innerHTML = `
                 <div style="text-align:center; padding: 20px; color: #81C784;">
                     <span class="material-symbols-rounded" style="font-size: 48px;">check_circle_outline</span>
@@ -402,6 +421,7 @@ async function checkAccounts() {
             showToast("המכשיר מוכן להתקנה");
         } else {
             updateStatusBadge('account-status', `<span class="material-symbols-rounded">error</span> נמצאו ${uniqueAccounts.length} חשבונות`, 'error');
+            bypassBtn.style.display = 'inline-flex'; // Show bypass button only if accounts found
             
             let cardsHtml = '';
             
@@ -411,7 +431,7 @@ async function checkAccounts() {
                 cardsHtml += `
                 <div class="account-card ${visuals.class}">
                     <div class="account-icon-wrapper">
-                        <span class="material-symbols-rounded">${visuals.icon}</span>
+                        ${visuals.html}
                     </div>
                     <div class="account-info">
                         <div class="account-name" title="${acc.name}">${acc.name}</div>
@@ -430,11 +450,9 @@ async function checkAccounts() {
     } catch (e) {
         showToast("שגיאה בבדיקת חשבונות");
         console.error("Account check error:", e);
-        // Fallback UI for error
         updateStatusBadge('account-status', `שגיאה בבדיקה`, 'error');
     }
 }
-
 async function checkForUpdates() {
     const infoText = document.getElementById('update-info-text');
     const btn = document.getElementById('btn-download');
@@ -579,7 +597,7 @@ async function runInstallation() {
         // 1. Validate APK
         if(!apkBlob) {
             if (!ENABLE_WEB_UPDATE) {
-                log("> טוען קובץ התקנה מקומי (Bundled)...", 'info');
+                log("> טוען קובץ apk...", 'info');
             } else {
                 log("> קובץ לא הורד, טוען קובץ התקנה מקומי כגיבוי...", 'info');
             }
@@ -616,9 +634,17 @@ async function runInstallation() {
         // 4. Set Device Owner
         updateProgress(0.7);
         await executeAdbCommand(
+            `appops set ${TARGET_PACKAGE} WRITE_SETTINGS allow`, 
+            "הגדרת הרשאות ניהול נוספות"
+            
+        ); 
+
+        updateProgress(0.8);
+        await executeAdbCommand(
             `dpm set-device-owner ${TARGET_PACKAGE}/${DEVICE_ADMIN}`, 
             "הגדרת מנהל מערכת"
-        );
+
+        );       
 
         // 5. Launch
         updateProgress(0.9);

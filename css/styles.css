@@ -1,4 +1,4 @@
-/* --- Keep all existing CSS --- */
+/* --- Root Variables --- */
 :root {
     /* Material Design 3 Dark Theme Tokens */
     --md-sys-color-background: #111318;
@@ -29,7 +29,7 @@ body {
     height: 100vh;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow: hidden; /* Default for Desktop App-feel */
 }
 
 /* --- Header & Stepper --- */
@@ -41,6 +41,7 @@ header {
     background: var(--md-sys-color-surface);
     box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     z-index: 10;
+    flex-shrink: 0; /* Prevent header from shrinking */
 }
 
 .app-title {
@@ -79,14 +80,20 @@ header {
 
 /* --- Main Layout --- */
 .main-container {
-    display: grid;
-    grid-template-columns: 1fr 380px;
-    gap: 40px;
+    display: flex; 
+    flex-direction: row;
     padding: 40px;
-    height: 100%;
-    max-width: 1400px;
+    height: 100%; /* Take remaining height */
+    max-width: 2400px;
     margin: 0 auto;
     width: 100%;
+    gap: 0; /* Start with no gap (Welcome mode) */
+    transition: gap 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    overflow: hidden; /* Prevent double scrollbars on desktop */
+}
+
+body:not(.welcome-mode) .main-container {
+    gap: 60px; /* Gap between panel and phone on desktop */
 }
 
 /* --- Left Panel (Content) --- */
@@ -96,9 +103,13 @@ header {
     border-radius: var(--border-radius-lg);
     padding: 40px;
     box-shadow: var(--md-elevation-2);
-    overflow-y: auto;
     display: flex;
     flex-direction: column;
+    flex: 1; /* Take up available space */
+    transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: 2;
+    overflow-y: auto; /* Scroll inside panel if needed */
+    height: 100%;
 }
 
 .page {
@@ -135,6 +146,7 @@ h2 {
 .info-card .material-symbols-rounded {
     font-size: 24px;
     color: var(--md-sys-color-primary);
+    flex-shrink: 0; /* Prevent icon shrinking */
 }
 
 .list-item {
@@ -157,18 +169,15 @@ h2 {
     margin-left: 15px;
     font-weight: bold;
     font-size: 0.9rem;
+    flex-shrink: 0;
 }
 
-/* --- New Account List Styles --- */
+/* --- Account List Styles --- */
 #account-list {
     margin-top: 20px;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    /* Remove old borders/backgrounds if present in previous CSS, 
-       or keep them as a container wrapper */
-    background: transparent; 
-    border: none;
     padding: 0;
 }
 
@@ -182,10 +191,7 @@ h2 {
     transition: transform 0.2s;
 }
 
-.account-card:hover {
-    transform: translateX(5px);
-}
-
+.account-card:hover { transform: translateX(5px); }
 .account-icon-wrapper {
     width: 40px;
     height: 40px;
@@ -193,68 +199,89 @@ h2 {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-left: 15px; /* RTL margin */
+    margin-left: 15px;
     background: rgba(255, 255, 255, 0.1);
     flex-shrink: 0;
 }
 
-.account-icon-wrapper .material-symbols-rounded {
-    font-size: 24px;
-    color: #fff;
-}
+/* Updated to support both Material Font and SVGs */
+.account-icon-wrapper .material-symbols-rounded { font-size: 24px; color: #fff; }
+.account-icon-wrapper svg { width: 22px; height: 22px; fill: #fff; }
 
-.account-info {
-    flex-grow: 1;
-    overflow: hidden;
-}
+.account-info { flex-grow: 1; overflow: hidden; }
+.account-name { font-size: 1rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.account-type { font-size: 0.8rem; color: var(--md-sys-color-outline); display: flex; align-items: center; gap: 5px; }
 
-.account-name {
-    font-size: 1rem;
-    font-weight: 500;
-    color: var(--md-sys-color-on-surface);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.account-type {
-    font-size: 0.8rem;
-    color: var(--md-sys-color-outline);
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-/* Specific Account Brand Colors */
-.acc-google { border-left-color: #4285F4; }
+/* Account Brand Colors */
+/* Google (Blue) */
+.acc-google { border-left-color: #4285F4; } 
 .acc-google .account-icon-wrapper { background: #4285F4; }
 
-.acc-samsung { border-left-color: #1428A0; }
+/* Samsung (Dark Blue) */
+.acc-samsung { border-left-color: #1428A0; } 
 .acc-samsung .account-icon-wrapper { background: #1428A0; }
 
-.acc-whatsapp { border-left-color: #25D366; }
+/* WhatsApp (Green) */
+.acc-whatsapp { border-left-color: #25D366; } 
 .acc-whatsapp .account-icon-wrapper { background: #25D366; }
 
-.acc-exchange { border-left-color: #0078D4; }
-.acc-exchange .account-icon-wrapper { background: #0078D4; }
+/* Exchange/Office (Office Blue) */
+.acc-exchange { border-left-color: #D83B01; } 
+.acc-exchange .account-icon-wrapper { background: #D83B01; }
 
-.acc-telegram { border-left-color: #24A1DE; }
+/* Telegram (Light Blue) */
+.acc-telegram { border-left-color: #24A1DE; } 
 .acc-telegram .account-icon-wrapper { background: #24A1DE; }
 
+/* X / Twitter (Black) */
+.acc-twitter { border-left-color: #000000; }
+.acc-twitter .account-icon-wrapper { background: #000000; }
 
+/* Facebook (Blue) */
+.acc-facebook { border-left-color: #1877F2; }
+.acc-facebook .account-icon-wrapper { background: #1877F2; }
+
+/* Xiaomi (Orange) */
+.acc-xiaomi { border-left-color: #FF6900; }
+.acc-xiaomi .account-icon-wrapper { background: #FF6900; }
+
+/* TikTok (Black/Pink mix - simplified to black) */
+.acc-tiktok { border-left-color: #000000; }
+.acc-tiktok .account-icon-wrapper { background: #000000; }
+
+/* Unknown / Generic (Grey) */
+.acc-unknown { border-left-color: #607D8B; }
+.acc-unknown .account-icon-wrapper { background: #607D8B; }
 /* --- Right Panel (Phone Frame) --- */
 .phone-panel {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    /* Animation Initial State */
+    width: 0;
+    opacity: 0;
+    transform: translateX(100px) scale(0.8);
+    pointer-events: none;
+    overflow: hidden;
+    transition: 
+        width 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.6s ease-in 0.2s,
+        transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+body:not(.welcome-mode) .phone-panel {
+    width: 500px;
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    pointer-events: all;
 }
 
 .phone-frame {
-    width: 300px;
-    height: 600px;
-    border: 12px solid #2d2d2d;
-    border-radius: 45px;
+    width: 400px; /* Slightly reduced for better fit on laptops */
+    height: 650px;
+    border: 10px solid #2d2d2d;
+    border-radius: 40px;
     background: #000;
     position: relative;
     overflow: hidden;
@@ -264,28 +291,16 @@ h2 {
 .phone-frame::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 120px;
-    height: 25px;
+    top: 0; left: 50%; transform: translateX(-50%);
+    width: 100px; height: 20px;
     background: #2d2d2d;
-    border-bottom-left-radius: 15px;
-    border-bottom-right-radius: 15px;
+    border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;
     z-index: 5;
 }
 
-video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
+video { width: 100%; height: 100%; object-fit: cover; }
 
-.phone-controls {
-    margin-top: 20px;
-    display: flex;
-    gap: 20px;
-}
+.phone-controls { margin-top: 20px; display: flex; gap: 20px; }
 
 /* --- Buttons & Inputs --- */
 .btn {
@@ -306,27 +321,62 @@ video {
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
+.btn:hover { box-shadow: 0 4px 12px rgba(168, 199, 250, 0.4); transform: translateY(-1px); }
+.btn:disabled { background-color: #333; color: #777; cursor: not-allowed; box-shadow: none; transform: none; }
+.btn-tonal { background-color: var(--md-sys-color-surface-variant); color: var(--md-sys-color-on-surface); }
+.btn-tonal:hover { background-color: #555; }
+.btn-beta { background: rgba(255, 152, 0, 0.15); color: #FF9800; border: 1px solid rgba(255, 152, 0, 0.5); }
 
-.btn:hover {
-    box-shadow: 0 4px 12px rgba(168, 199, 250, 0.4);
+/* Calm Button - Tonal Yellow Version */
+.btn-calm {
+    /* Colors: Using Tertiary (often yellow/gold in MD3) or soft custom yellow */
+    --bg-color: #ffe676; /* A soft, warm yellow (amber-50) */
+    --text-color: #92400e; /* A deep golden brown for contrast */
+    --border-color: #f59e0b; /* A medium gold for the border */
+
+    background: var(--bg-color);
+    color: var(--text-color);
+    border: 1px solid transparent; /* Keep it clean by default */
+    
+    /* Size: Increased from 32px to 40px for better visibility */
+    height: 40px;
+    padding: 0 20px;
+    border-radius: 12px; /* Slightly rounder for a modern look */
+    
+    /* Typography */
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    
+    /* Layout */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Hover: Becomes more "Button-like" but stays calm */
+.btn-calm:hover {
+    background: #f8e8a5; /* Slightly deeper yellow */
+    border-color: var(--border-color);
+    color: #78350f;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     transform: translateY(-1px);
 }
 
-.btn:disabled {
-    background-color: #333;
-    color: #777;
-    cursor: not-allowed;
-    box-shadow: none;
-    transform: none;
+/* Active: Pressed state */
+.btn-calm:active {
+    transform: translateY(0px);
+    background: #b18e1e;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.btn-tonal {
-    background-color: var(--md-sys-color-surface-variant);
-    color: var(--md-sys-color-on-surface);
-}
-
-.btn-tonal:hover {
-    background-color: #555;
+/* Icon scaling */
+.btn-calm .material-symbols-rounded {
+    font-size: 20px; /* Slightly bigger icon to match button size */
 }
 
 .action-area {
@@ -336,6 +386,8 @@ video {
     align-items: center;
     justify-content: space-between;
     border-top: 1px solid var(--md-sys-color-surface-variant);
+    gap: 15px;
+    flex-wrap: wrap;
 }
 
 .status-badge {
@@ -347,8 +399,8 @@ video {
     display: flex;
     align-items: center;
     gap: 8px;
+    white-space: nowrap;
 }
-
 .status-badge.success { color: #81C784; background: rgba(27, 94, 32, 0.2); }
 .status-badge.error { color: #E57373; background: rgba(183, 28, 28, 0.2); }
 
@@ -359,30 +411,19 @@ video {
     font-family: 'Consolas', monospace;
     padding: 15px;
     border-radius: 12px;
-    height: 250px; /* Increased height */
+    height: 250px;
     overflow-y: auto;
     font-size: 0.85rem;
     border: 1px solid #333;
     line-height: 1.4;
+    word-break: break-all;
 }
 
-.log-entry {
-    margin-bottom: 4px;
-    border-left: 3px solid transparent;
-    padding-left: 10px;
-}
-
+.log-entry { margin-bottom: 4px; border-left: 3px solid transparent; padding-left: 10px; }
 .log-info { color: #8e9099; }
 .log-success { color: #81C784; border-left-color: #4CAF50; }
-.log-error { 
-    color: #FFB4AB; 
-    background: rgba(255, 180, 171, 0.1); 
-    border-left-color: #CF6679;
-    padding: 8px;
-    font-weight: bold;
-}
+.log-error { color: #FFB4AB; background: rgba(255, 180, 171, 0.1); border-left-color: #CF6679; padding: 8px; font-weight: bold; }
 
-/* --- Snackbar --- */
 #snackbar {
     visibility: hidden;
     min-width: 250px;
@@ -398,147 +439,129 @@ video {
     transform: translateX(-50%);
     box-shadow: 0 4px 15px rgba(0,0,0,0.5);
     font-size: 1rem;
+    max-width: 90%;
 }
 #snackbar.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
 
 @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
 @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
 
-/* --- ProgressBar --- */
-.progress-wrapper {
-    width: 100%;
-    background: #333;
-    height: 6px;
-    border-radius: 3px;
-    margin: 20px 0;
-    overflow: hidden;
-    display: none;
-}
-.progress-fill {
-    height: 100%;
-    width: 0%;
-    background: var(--md-sys-color-primary);
-    transition: width 0.3s ease;
-}
+.progress-wrapper { width: 100%; background: #333; height: 6px; border-radius: 3px; margin: 20px 0; overflow: hidden; display: none; }
+.progress-fill { height: 100%; width: 0%; background: var(--md-sys-color-primary); transition: width 0.3s ease; }
 
-/* --- Compatibility Notice --- */
-#compatibility-notice {
-    display: none;
-    text-align: center;
-    padding: 30px;
-    background-color: var(--md-sys-color-surface-variant);
-    border-radius: var(--border-radius-lg);
-}
+.warning-box { border: 1px solid #FF9800; background: rgba(255, 152, 0, 0.05); padding: 15px; border-radius: 8px; margin-top: 15px; font-size: 0.9rem; display: none; }
 
-/* --- DEVELOPER MODE CONSOLE (NEW) --- */
-#dev-console {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 500px;
-    background: #000;
-    border: 1px solid #00ff00;
-    box-shadow: 0 0 20px rgba(0, 255, 0, 0.1);
-    border-radius: 8px;
-    z-index: 9999;
-    font-family: 'Consolas', monospace;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
+#compatibility-notice { display: none; text-align: center; padding: 30px; background-color: var(--md-sys-color-surface-variant); border-radius: var(--border-radius-lg); }
 
-.dev-header {
-    background: #002200;
-    color: #00ff00;
-    padding: 8px 12px;
-    font-weight: bold;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #00ff00;
-}
-
-.dev-log {
-    height: 250px;
-    overflow-y: auto;
-    padding: 10px;
-    color: #ccc;
-    font-size: 12px;
-}
-
+/* --- Development Console --- */
+#dev-console { position: fixed; bottom: 20px; right: 20px; width: 500px; background: #000; border: 1px solid #00ff00; box-shadow: 0 0 20px rgba(0, 255, 0, 0.1); border-radius: 8px; z-index: 9999; font-family: 'Consolas', monospace; display: flex; flex-direction: column; overflow: hidden; }
+.dev-header { background: #002200; color: #00ff00; padding: 8px 12px; font-weight: bold; display: flex; justify-content: space-between; border-bottom: 1px solid #00ff00; }
+.dev-log { height: 250px; overflow-y: auto; padding: 10px; color: #ccc; font-size: 12px; }
 .dev-log-entry { margin-bottom: 5px; border-bottom: 1px solid #222; padding-bottom: 2px; }
-.dev-log-entry.cmd { color: #ffff00; }
-.dev-log-entry.resp { color: #00ffff; }
-.dev-log-entry.waiting { color: #ff00ff; animation: pulse 1s infinite; }
+.dev-controls { padding: 10px; background: #111; border-top: 1px solid #333; }
+.dev-input-group { display: flex; gap: 5px; margin-bottom: 8px; }
+.dev-input-group input { flex-grow: 1; background: #222; border: 1px solid #444; color: #fff; padding: 5px; }
+.dev-scenarios { display: flex; gap: 5px; flex-wrap: wrap; }
+.dev-btn { background: #222; color: #00ff00; border: 1px solid #00ff00; padding: 4px 8px; font-size: 10px; cursor: pointer; text-transform: uppercase; }
 
-.dev-controls {
-    padding: 10px;
-    background: #111;
-    border-top: 1px solid #333;
-}
+/* ========================================= */
+/*       RESPONSIVE DESIGN (MOBILE/TABLET)   */
+/* ========================================= */
 
-.dev-input-group {
-    display: flex;
-    gap: 5px;
-    margin-bottom: 8px;
-}
+@media (max-width: 1100px) {
+    body {
+        /* Enable native scrolling on mobile */
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
+    }
 
-.dev-input-group input {
-    flex-grow: 1;
-    background: #222;
-    border: 1px solid #444;
-    color: #fff;
-    padding: 5px;
-    font-family: monospace;
-}
+    header {
+        padding: 15px 20px;
+    }
 
-.dev-scenarios {
-    display: flex;
-    gap: 5px;
-    flex-wrap: wrap;
-}
+    .app-title {
+        font-size: 1.2rem;
+    }
 
-.dev-btn {
-    background: #222;
-    color: #00ff00;
-    border: 1px solid #00ff00;
-    padding: 4px 8px;
-    font-size: 10px;
-    cursor: pointer;
-    text-transform: uppercase;
-}
+    .stepper {
+        gap: 8px; /* Tighter dots */
+    }
 
-.dev-btn:hover { background: #00ff00; color: #000; }
+    .main-container {
+        display: block; /* Remove flex constraint */
+        padding: 15px;
+        height: auto;
+        overflow: visible;
+    }
 
-@keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+    /* Override Desktop Animation Gap Logic */
+    body:not(.welcome-mode) .main-container {
+        gap: 0;
+    }
 
-/* --- Beta / Experimental Styles --- */
-.btn-beta {
-    background: rgba(255, 152, 0, 0.15);
-    color: #FF9800;
-    border: 1px solid rgba(255, 152, 0, 0.5);
-}
+    .content-panel {
+        width: 100%;
+        height: auto;
+        min-height: 60vh;
+        padding: 25px 20px;
+        margin-bottom: 20px;
+    }
 
-.btn-beta:hover {
-    background: rgba(255, 152, 0, 0.25);
-    box-shadow: 0 0 15px rgba(255, 152, 0, 0.2);
-}
+    /* Hide the Phone Panel on Tablet/Mobile to save space */
+    .phone-panel, 
+    body:not(.welcome-mode) .phone-panel {
+        display: none !important; 
+        width: 0;
+        margin: 0;
+    }
 
-.warning-box {
-    border: 1px solid #FF9800;
-    background: rgba(255, 152, 0, 0.05);
-    padding: 15px;
-    border-radius: 8px;
-    margin-top: 15px;
-    font-size: 0.9rem;
-    display: none; /* Hidden by default */
-}
+    h2 {
+        font-size: 1.5rem;
+    }
 
-/* Mobile */
-@media (max-width: 900px) {
-    .main-container { grid-template-columns: 1fr; padding: 20px; overflow-y: scroll; display: block; }
-    .phone-panel { display: none; }
-    header { padding: 15px 20px; }
-    .app-title { font-size: 1.2rem; }
-    #dev-console { width: 95%; right: 2.5%; bottom: 10px; }
+    .info-card {
+        padding: 15px;
+        font-size: 1rem;
+    }
+
+    .list-item {
+        font-size: 1rem;
+    }
+
+    /* Action Area: Stack Buttons */
+    .action-area {
+        flex-direction: column-reverse; /* Status at bottom */
+        align-items: stretch; /* Full width items */
+        gap: 15px;
+    }
+
+    .action-area > div {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+    }
+
+    /* Buttons full width on mobile */
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Status Badge Centered */
+    .status-badge {
+        justify-content: center;
+        width: 100%;
+        margin-top: 10px;
+        font-size: 0.9rem;
+    }
+
+    /* Adjust Dev Console for small screens */
+    #dev-console {
+        width: 95%;
+        left: 2.5%;
+        right: auto;
+        bottom: 10px;
+    }
 }

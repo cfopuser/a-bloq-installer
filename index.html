@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">    
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://api.github.com; object-src 'none';">
+    
     <title>מתקין A-Bloq</title>
     
     <!-- Google Fonts & Material Icons -->
@@ -16,10 +17,10 @@
     <!-- WebADB Library -->
     <script src="js/webadb.js"></script>
 </head>
-<body>
+<body class="welcome-mode">
 
     <header>
-        <div class="app-title" onclick="triggerDevModeSecret()">
+        <div class="app-title">
             <span class="material-symbols-rounded">security</span>
             מתקין A-Bloq
         </div>
@@ -33,7 +34,7 @@
     </header>
 
     <div class="main-container">
-        <!-- ... [Content Panel content remains exactly the same as original] ... -->
+        <!-- ... Content Panel ... -->
         <div class="content-panel">
 
             <!-- PAGE 0: Welcome -->
@@ -48,8 +49,6 @@
                         התחל תהליך
                         <span class="material-symbols-rounded">arrow_back</span>
                     </button>
-                    <!-- Dev Trigger hidden hint -->
-                    <div style="margin-top:20px; font-size: 0.8rem; color: #333; cursor: pointer;" onclick="window.enableDevMode()">[ Enable Dev Mode ]</div>
                 </div>
                 <div id="compatibility-notice">
                     <span class="material-symbols-rounded" style="font-size: 80px; color: var(--md-sys-color-error); margin-bottom: 20px;">browser_updated</span>
@@ -104,35 +103,34 @@
                 <div class="list-item"><div class="icon">1</div> הכנסו להגדרות -> חשבונות וגיבוי -> נהל חשבונות</div>
                 <div class="list-item"><div class="icon">2</div> בחרו כל חשבון והקישו "הסר חשבון"</div>
                 
+                <!-- Account List Container -->
                 <div id="account-list"></div>
-
-                <!-- NEW: Experimental Section -->
-                <div id="bypass-section" style="margin-top: 15px; text-align: center;">
-                    <button class="btn btn-beta" onclick="toggleBypassWarning()">
-                        <span class="material-symbols-rounded">science</span>
-                        נסה הסרה אוטומטית (Beta)
+                
+                <!-- Fill space -->
+                <div style="flex-grow: 1;"></div>
+                
+                <!-- Hidden Warning Box for Bypass -->
+                <div id="bypass-warning" class="warning-box" style="margin-bottom: 20px;">
+                    <strong style="display:block; margin-bottom:5px;">⚠️ מצב ניסיוני (Beta)</strong>
+                        פעולה זו תנסה להשבית זמנית את החשבונות במכשיר במקום שתצטרך למחוק אותם. <br>
+                        זה עלול לגרום לקריסות זמניות. החשבונות יופעלו מחדש אוטומטית בסיום ההתקנה.                    <br><br>
+                    <button class="btn btn-tonal" style="font-size: 0.8rem; height: 36px;" onclick="runAccountBypass()">
+                        אני מבין, בצע השבתה זמנית
                     </button>
-                    
-                    <div id="bypass-warning" class="warning-box">
-                        <strong style="display:block; margin-bottom:5px;">⚠️ מצב ניסיוני</strong>
-                        פעולה זו תנסה להשבית זמנית את האפליקציות שמחזיקות את החשבונות (כגון שירותי Google).
-                        <br>זה עלול לגרום לקריסות זמניות במכשיר. האפליקציות יופעלו מחדש אוטומטית בסיום ההתקנה.
-                        <br><br>
-                        <button class="btn btn-tonal" style="font-size: 0.8rem; height: 36px;" onclick="runAccountBypass()">
-                            אני מבין, בצע השבתה זמנית
-                        </button>
-                    </div>
-                </div>
-                <!-- End Experimental Section -->
-
-                <div style="flex-grow: 1; text-align: center; color: var(--md-sys-color-outline); padding-top: 20px;">
-                    ההתקנה תיכשל אם יימצא חשבון פעיל במכשיר.
                 </div>
 
                 <div class="action-area">
-                    <div id="account-status" class="status-badge">
-                        <span class="material-symbols-rounded">pending</span> ממתין לבדיקה
+                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                        <div id="account-status" class="status-badge">
+                            <span class="material-symbols-rounded">pending</span> ממתין לבדיקה
+                        </div>
+                        
+                        <button id="btn-bypass-trigger" class="btn-calm" onclick="toggleBypassWarning()" style="display: none;" title="נסה הסרה אוטומטית (Beta)">
+                            <span class="material-symbols-rounded">auto_fix</span>
+                        התקנה ללא הסרה (Beta)
+                        </button>
                     </div>
+
                     <div style="display: flex; gap: 10px;">
                         <button class="btn btn-tonal" onclick="checkAccounts()">
                             <span class="material-symbols-rounded">refresh</span> בדוק שוב
@@ -187,7 +185,6 @@
             </div>
 
         </div>
-        <!-- ... [End Content Panel] ... -->
 
         <!-- RIGHT PANEL (PHONE) -->
         <div class="phone-panel">
@@ -203,9 +200,6 @@
         </div>
 
     </div>
-
-    <!-- MOCK DEVICE CONTROLLER (Injected via JS, but structure here for reference) -->
-    <!-- See js/app.js for the dynamic insertion of #dev-console -->
 
     <!-- Snackbar for Notifications -->
     <div id="snackbar">הודעה כללית</div>
