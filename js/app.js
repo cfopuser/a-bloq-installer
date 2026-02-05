@@ -540,5 +540,6 @@ async function readAll(stream) {
     } catch (e) {
         console.warn("Stream reading interrupted", e);
     }
-    return res.trim();
+    return res.trim(); 
+    
 }
