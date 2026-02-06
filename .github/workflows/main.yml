@@ -2,8 +2,8 @@ name: Update APK from External Repo
 
 on:
   schedule:
-    - cron: '0 0 * * *' # Runs every day at midnight
-  workflow_dispatch:      # Allows you to run it manually for testing
+    - cron: '*/30 * * * *' # Runs every 30 minutes
+  workflow_dispatch:    # Allows you to run it manually for testing
 
 jobs:
   update-apk:
