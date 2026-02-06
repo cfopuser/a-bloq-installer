@@ -415,6 +415,7 @@ async function runInstallation() {
         }
         if (successMsg) {
             successMsg.style.display = 'flex'; // Show thank you message
+            document.getElementById('video-info-text').style.display = 'none';
         }
         // 1. Validate APK
         if (!apkBlob) {
