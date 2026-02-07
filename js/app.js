@@ -90,45 +90,25 @@ function toggleBypassWarning() {
     el.style.display = (el.style.display === 'block') ? 'none' : 'block';
 }
 
-async function getPackageForAccountType(type) {
-    // Check manual map first for speed/accuracy
-    if (ACCOUNT_PKG_MAP[type]) return ACCOUNT_PKG_MAP[type];
-
-    try {
-        // Query the system for registered authenticators
-        let s = await adb.shell("dumpsys account");
-        let output = await readAll(s);
-        
-        /* 
-           The output contains lines like:
-           Authenticator: type=com.google, ..., package=com.google.android.gms
-           We use a Regex to find the package associated with the specific type
-        */
-        const regex = new RegExp(`Authenticator\\s*{type=${type.replace(/\./g, '\\.')},.*?package=([^\\s,}]+)`, 'i');
-        const match = output.match(regex);
-        
-        if (match && match[1]) {
-            console.log(`Dynamic Discovery: Type ${type} belongs to ${match[1]}`);
-            return match[1];
-        }
-    } catch (e) {
-        console.error("Failed to resolve package dynamically", e);
-    }
-    return null; 
-}
-
-// --- UPDATED BYPASS LOGIC ---
 async function runAccountBypass() {
     if (!adb) return showToast("ADB לא מחובר");
 
+    // 1. Define the "No-Fly List" (Packages that must NEVER be disabled)
+    const PROTECTED_PACKAGES = [
+        'com.android.settings',      // The Settings app
+        'com.android.systemui',      // The Status bar and Navigation
+        'android',                   // The Core System
+        'com.google.android.setupwizard',
+        TARGET_PACKAGE               // Your own MDM app!
+    ];
+
     document.getElementById('bypass-warning').style.display = 'none';
-    updateStatusBadge('account-status', 'מבצע השבתה דינמית...', '');
+    updateStatusBadge('account-status', 'מבצע השבתה...', '');
 
     try {
         let s = await adb.shell("cmd account list");
         let output = await readAll(s);
 
-        // Standard regex to find accounts
         const accountRegex = /Account\s*\{name=([^,]+),\s*type=([^}]+)\}/gi;
         let matches = [...output.matchAll(accountRegex)];
 
@@ -136,39 +116,41 @@ async function runAccountBypass() {
 
         for (const m of matches) {
             const type = m[2].trim();
-
-            // 1. Try to find the package name dynamically
             let pkgToDisable = await getPackageForAccountType(type);
 
-            // 2. If dynamic discovery failed, use the type as a fallback 
-            // (Only if it looks like a package name)
             if (!pkgToDisable && type.includes('.')) {
                 pkgToDisable = type;
             }
 
             if (pkgToDisable && !processedPackages.has(pkgToDisable)) {
-                processedPackages.add(pkgToDisable);
-                log(`משבית: ${pkgToDisable} (עבור חשבון ${type})... `, 'info');
+                
+                // --- SAFETY CHECK START ---
+                if (PROTECTED_PACKAGES.includes(pkgToDisable)) {
+                    log(`דילוג על רכיב מערכת קריטי: ${pkgToDisable}`, 'warn');
+                    continue; // Skip this package and go to the next one
+                }
+                // --- SAFETY CHECK END ---
 
-                // 3. Disable the package
+                processedPackages.add(pkgToDisable);
+                log(`משבית: ${pkgToDisable}... `, 'info');
+
                 await executeAdbCommand(`pm disable-user --user 0 ${pkgToDisable}`, `השבתת ${pkgToDisable}`);
                 appState.disabledPackages.push(pkgToDisable);
             }
         }
 
+        // ... rest of the auto-proceed logic
         if (appState.disabledPackages.length > 0) {
-            showToast(`הושבתו ${appState.disabledPackages.length} רכיבים באופן דינמי.`);
+            showToast(`בוצעה השבתה ל-${appState.disabledPackages.length} רכיבים.`);
             appState.accountsClean = true;
             setTimeout(() => navigateTo('page-update', 3), 1500);
         } else {
-            showToast("לא נמצאו רכיבים להשבתה.");
             checkAccounts();
         }
 
     } catch (e) {
         console.error(e);
-        showToast("שגיאה בתהליך ההשבתה");
-        checkAccounts();
+        showToast("שגיאה בביצוע תהליך ההשבתה: " + e.message);
     }
 }
 
