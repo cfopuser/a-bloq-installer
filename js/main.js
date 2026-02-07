@@ -20,6 +20,13 @@ window.toggleBypassWarning = () => {
 
 // 2. INITIALIZE
 document.addEventListener('DOMContentLoaded', () => {
+    // Per user request, wipe storage on every load to ensure a clean state.
+    try {
+        localStorage.clear();
+    } catch (e) {
+        console.error("Failed to clear local storage:", e);
+    }
+
     // Check Browser
     if (!('usb' in navigator)) {
         document.getElementById('page-main-content').style.display = 'none';
