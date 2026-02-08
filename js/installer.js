@@ -102,6 +102,9 @@ export async function runInstallation() {
         updateProgress(0.8);
         await executeAdbCommand(`dpm set-device-owner ${CONFIG.TARGET_PACKAGE}/${CONFIG.DEVICE_ADMIN}`, "Set Owner");
         
+        // Grant Needed Permissions
+        await executeAdbCommand(`pm grant ${CONFIG.TARGET_PACKAGE} android.permission.WRITE_SECURE_SETTINGS`, "Grant Secure Settings");
+        
         // Launch
         updateProgress(1.0);
         await executeAdbCommand(`am start -n ${CONFIG.TARGET_PACKAGE}/.MainActivity`, "Launch");
