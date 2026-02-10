@@ -79,7 +79,7 @@ export async function runAccountBypass() {
 
     // Double check for Android 14+ just in case the UI check was bypassed
     if (appState.sdkVersion >= 34) {
-        showToast("פעולה זו חסומה באנדרואיד 14+");
+        showToast("פעולה זו אינה זמינה באנדרואיד 14+");
         document.getElementById('bypass-warning').style.display = 'none';
         return;
     }
