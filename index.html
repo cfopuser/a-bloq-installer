@@ -175,9 +175,15 @@
                 </div>
 
                 <div class="action-area">
-                    <div class="status-badge">
-                        <span class="material-symbols-rounded">terminal</span> Console
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <div class="status-badge">
+                            <span class="material-symbols-rounded">terminal</span> Console
+                        </div>
+                        <button class="btn btn-tonal" onclick="copyLogToClipboard()" style="padding: 0 16px; height: 36px;" title="העתק לוג לדיווח">
+                            <span class="material-symbols-rounded">content_copy</span> העתק לוג
+                        </button>
                     </div>
+                    
                     <button id="btn-install-start" class="btn" onclick="runInstallation()">
                         <span class="material-symbols-rounded">play_arrow</span> התחל התקנה
                     </button>

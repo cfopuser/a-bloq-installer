@@ -1,5 +1,5 @@
 // js/main.js
-import { navigateTo, toggleVideo, log, showToast } from './ui.js';
+import { navigateTo, toggleVideo, log, showToast, copyLogToClipboard } from './ui.js';
 import { connectAdb } from './adb-client.js';
 import { checkAccounts, runAccountBypass } from './accounts.js';
 import { checkForUpdates, startDownload, runInstallation } from './installer.js';
@@ -13,6 +13,7 @@ window.checkAccounts = checkAccounts;
 window.runAccountBypass = runAccountBypass;
 window.startDownload = startDownload;
 window.runInstallation = runInstallation;
+window.copyLogToClipboard = copyLogToClipboard;
 
 // Handle the "Install without removal" button click
 window.toggleBypassWarning = () => {

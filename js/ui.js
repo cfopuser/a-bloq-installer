@@ -7,7 +7,11 @@ export function log(text, type = 'info') {
     if(el) {
         const div = document.createElement('div');
         div.className = `log-entry log-${type}`;
-        const sanitized = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        // Ensure we handle timestamping for better debugging
+        const time = new Date().toLocaleTimeString('en-GB', { hour12: false });
+        const content = `[${time}] ${text}`;
+        
+        const sanitized = content.replace(/</g, "&lt;").replace(/>/g, "&gt;");
         div.innerHTML = sanitized.replace(/\n/g, '<br>');
         el.appendChild(div);
         el.scrollTop = el.scrollHeight;
@@ -20,6 +24,44 @@ export function showToast(message) {
     x.innerText = message;
     x.className = "show";
     setTimeout(() => { x.className = x.className.replace("show", ""); }, 3000);
+}
+
+export async function copyLogToClipboard() {
+    const el = document.getElementById('install-log');
+    if (!el || el.innerText.trim() === "") {
+        showToast("הלוג ריק, אין מה להעתיק");
+        return;
+    }
+
+    // Gather info
+    const date = new Date().toLocaleString();
+    const modelInfo = document.getElementById('adb-status')?.innerText || "Unknown";
+    const sdk = appState.sdkVersion || "Unknown";
+    
+    // Format text
+    let logContent = "";
+    el.childNodes.forEach(node => {
+        logContent += node.innerText + "\n";
+    });
+
+    const markdown = `### A-Bloq Installer Report
+**Date:** ${date}
+**Device Status:** ${modelInfo}
+**SDK Version:** ${sdk}
+**WebUSB Supported:** ${'usb' in navigator}
+
+\`\`\`text
+${logContent}
+\`\`\`
+`;
+
+    try {
+        await navigator.clipboard.writeText(markdown);
+        showToast("הלוג הועתק ללוח!");
+    } catch (err) {
+        console.error('Failed to copy: ', err);
+        showToast("שגיאה בהעתקה");
+    }
 }
 
 export function navigateTo(pageId, stepIndex) {
