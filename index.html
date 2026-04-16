@@ -25,8 +25,16 @@
     <!-- WebADB Library -->
     <script src="js/webadb.js"></script>
 
-    <script data-goatcounter="https://cfopuser.goatcounter.com/count"
-        async src="//gc.zgo.at/count.js"></script>
+    <script>
+        if (window.location.href.startsWith('https://cfopuser.github.io/a-bloq-installer/')) {
+            var script = document.createElement('script');
+            script.async = true;
+            script.src = "//gc.zgo.at/count.js";
+            script.dataset.goatcounter = "https://cfopuser.goatcounter.com/count";
+            document.head.appendChild(script);
+        }
+    </script>
+
     
 </head>
 <body class="welcome-mode">
