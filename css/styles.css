@@ -1,18 +1,18 @@
 /* --- Root Variables --- */
 :root {
     /* Material Design 3 Dark Theme Tokens */
-    --md-sys-color-background: #111318;
-    --md-sys-color-surface: #1E2025;
+    --md-sys-color-background: #1A1C1E;
+    --md-sys-color-surface: #23262A;
     --md-sys-color-surface-variant: #44474F;
-    --md-sys-color-primary: #A8C7FA;
-    --md-sys-color-on-primary: #003063;
-    --md-sys-color-primary-container: #00478E;
+    --md-sys-color-primary: #D6E3FF;
+    --md-sys-color-on-primary: #00315B;
+    --md-sys-color-primary-container: #2D4777;
     --md-sys-color-on-primary-container: #D6E3FF;
-    --md-sys-color-secondary: #5DD5FC;
+    --md-sys-color-secondary: #BCE9FF;
     --md-sys-color-secondary-container: #004F58;
     --md-sys-color-error: #FFB4AB;
-    --md-sys-color-on-surface: #E2E2E6;
-    --md-sys-color-outline: #8E9099;
+    --md-sys-color-on-surface: #C4C6CF;
+    --md-sys-color-outline: #74777F;
     --md-elevation-2: 0px 4px 8px 3px rgba(0,0,0,0.15);
     
     --border-radius-lg: 24px;
@@ -325,7 +325,7 @@ video { width: 100%; height: 100%; object-fit: cover; }
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
-.btn:hover { box-shadow: 0 4px 12px rgba(168, 199, 250, 0.4); transform: translateY(-1px); }
+.btn:hover { box-shadow: 0 4px 12px rgba(214, 227, 255, 0.4); transform: translateY(-1px); }
 .btn:disabled { background-color: #333; color: #777; cursor: not-allowed; box-shadow: none; transform: none; }
 .btn-tonal { background-color: var(--md-sys-color-surface-variant); color: var(--md-sys-color-on-surface); }
 .btn-tonal:hover { background-color: #555; }
@@ -334,9 +334,9 @@ video { width: 100%; height: 100%; object-fit: cover; }
 /* Calm Button - Tonal Yellow Version */
 .btn-calm {
     /* Colors: Using Tertiary (often yellow/gold in MD3) or soft custom yellow */
-    --bg-color: #ffe676; /* A soft, warm yellow (amber-50) */
-    --text-color: #92400e; /* A deep golden brown for contrast */
-    --border-color: #f59e0b; /* A medium gold for the border */
+    --bg-color: #FFF9C4; /* Paler yellow */
+    --text-color: #795548; /* Softer brown */
+    --border-color: #FFECB3; /* Softer gold */
 
     background: var(--bg-color);
     color: var(--text-color);
@@ -405,8 +405,8 @@ video { width: 100%; height: 100%; object-fit: cover; }
     gap: 8px;
     white-space: nowrap;
 }
-.status-badge.success { color: #81C784; background: rgba(27, 94, 32, 0.2); }
-.status-badge.error { color: #E57373; background: rgba(183, 28, 28, 0.2); }
+.status-badge.success { color: #A5D6A7; background: rgba(56, 142, 60, 0.1); }
+.status-badge.error { color: #EF9A9A; background: rgba(211, 47, 47, 0.1); }
 
 /* --- Terminal / Log --- */
 .terminal {
@@ -608,10 +608,51 @@ video { width: 100%; height: 100%; object-fit: cover; }
     margin-top: 10px;
     letter-spacing: 2px;
     text-transform: uppercase;
-    text-shadow: 0 0 20px rgba(168, 199, 250, 0.3);
+    text-shadow: 0 0 20px rgba(214, 227, 255, 0.3);
 }
 
 @keyframes fadeIn {
     from { opacity: 0; transform: scale(0.95); }
     to { opacity: 1; transform: scale(1); }
+}
+
+/* --- Footprint Footer --- */
+.footprint {
+    position: absolute;
+    bottom: 15px;
+    right: 25px;
+    display: flex;
+    gap: 15px;
+    font-size: 0.7rem;
+    color: var(--md-sys-color-outline);
+    opacity: 0.5;
+    transition: all 0.3s ease;
+    z-index: 100;
+    font-weight: 500;
+}
+
+.footprint:hover {
+    opacity: 1;
+}
+
+.footprint a {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.footprint a:hover {
+    color: var(--md-sys-color-primary);
+    text-shadow: 0 0 10px rgba(214, 227, 255, 0.3);
+}
+
+@media (max-width: 1100px) {
+    .footprint {
+        position: static;
+        justify-content: center;
+        padding: 20px;
+        width: 100%;
+        background: var(--md-sys-color-surface);
+        border-top: 1px solid var(--md-sys-color-surface-variant);
+    }
 }
