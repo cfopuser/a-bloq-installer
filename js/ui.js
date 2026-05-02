@@ -105,5 +105,14 @@ export function updateProgress(val) {
 
 export function toggleVideo() {
     const vid = document.getElementById('guide-video');
-    if (vid.paused) vid.play(); else vid.pause();
+    const icon = document.getElementById('video-icon');
+    if (vid) {
+        if (vid.paused) {
+            vid.play();
+            if (icon) icon.innerText = 'pause';
+        } else {
+            vid.pause();
+            if (icon) icon.innerText = 'play_arrow';
+        }
+    }
 }

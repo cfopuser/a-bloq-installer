@@ -227,5 +227,17 @@
 
     <script src="js/webadb.js"></script> 
     <script type="module" src="js/main.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+        <script>
+        // Only run GoatCounter on the production domain
+        if (window.location.hostname !== 'cfopuser.github.io') {
+            window.goatcounter = { no_onload: true };
+        }
+    </script>
+    <script data-goatcounter="https://cfopuser.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+
+
+
 </body>
 </html>
