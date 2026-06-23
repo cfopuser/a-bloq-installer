@@ -37,7 +37,11 @@ export async function startDownload() {
     document.getElementById('dl-progress-wrapper').style.display = 'block';
 
     try {
-        const resp = await fetch(foundRelease.url, { headers: { 'Accept': 'application/octet-stream' } });
+        // Use browser_download_url to avoid CORS preflight issues with the api url
+        const downloadUrl = foundRelease.browser_download_url || foundRelease.url;
+        const resp = await fetch(downloadUrl);
+        if (!resp.ok) throw new Error("Download failed");
+        
         const reader = resp.body.getReader();
         const len = +resp.headers.get('Content-Length');
         let received = 0, chunks = [];
@@ -55,6 +59,7 @@ export async function startDownload() {
         setTimeout(() => navigateTo('page-install', 4), 1000);
     } catch (e) {
         showToast("שגיאה בהורדה");
+        console.error(e);
         btn.disabled = false;
     }
 }
@@ -78,7 +83,8 @@ export async function runInstallation() {
         // Load APK
         if (!apkBlob) {
             log("טוען APK מקומי...", 'info');
-            const resp = await fetch(CONFIG.APK_LOCAL_PATH);
+            // Added cache-busting timestamp parameter to prevent proxy/filter range request delivery issues
+            const resp = await fetch(`${CONFIG.APK_LOCAL_PATH}?t=${Date.now()}`);
             if (!resp.ok) throw new Error("APK מקומי חסר");
             apkBlob = await resp.blob();
         }
