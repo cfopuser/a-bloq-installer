@@ -77,7 +77,7 @@ export async function runInstallation() {
 
     try {
         // Pre-checks
-        const owner = await executeAdbCommand("dpm get-device-owner", "Check Owner", true);
+        const owner = await executeAdbCommand("dumpsys device_policy", "Check Owner", true);
         if (owner.includes("ComponentInfo") && !owner.includes(CONFIG.TARGET_PACKAGE)) throw new Error("קיים ניהול אחר");
         
         // Load APK
