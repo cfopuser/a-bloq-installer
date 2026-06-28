@@ -23,7 +23,7 @@ jobs:
           mkdir -p apk
           
           # Download the release and save it into the apk folder
-          gh release download --repo sesese1234/SecureGuardMDM --pattern "*.apk" --clobber --output apk/normal.apk
+          gh release download --repo another-weird-dude/SecureGuardMDM --pattern "*.apk" --clobber --output apk/normal.apk
 
       - name: Commit and Push if changed
         run: |
