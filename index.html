@@ -36,6 +36,22 @@
         <!-- ... Content Panel ... -->
         <div class="content-panel">
 
+            <!-- Global Contextual Emergency Restore Banner -->
+            <div id="emergency-restore-box" class="global-rescue-bar" style="display: none;">
+                <div class="rescue-bar-content">
+                    <span class="material-symbols-rounded rescue-icon">build_circle</span>
+                    <div class="rescue-text">
+                        <strong id="rescue-banner-title">זוהו רכיבי מערכת מושבתים מהפעלה קודמת</strong>
+                        <span id="rescue-banner-desc">נמצאו חבילות שהושבתו זמנית ולא שוחזרו. מומלץ לשחזרן כדי להחזיר את המכשיר לתקינות מלאה.</span>
+                    </div>
+                </div>
+                <div class="rescue-actions">
+                    <button class="btn btn-tonal btn-rescue-action" onclick="emergencyRestoreAccounts()">
+                        <span class="material-symbols-rounded">settings_backup_restore</span> שחזר רכיבים כעת
+                    </button>
+                </div>
+            </div>
+
             <!-- PAGE 0: Welcome -->
             <div id="page-main" class="page active" style="justify-content: center; align-items: center; text-align: center;">
                 <div id="page-main-content">
@@ -67,17 +83,6 @@
                 </div>
 
                 <div style="flex-grow: 1;">
-                    <!-- Emergency Restore Banner (shown if previous session was interrupted) -->
-                    <div id="emergency-restore-box" class="warning-box" style="display: none; margin-bottom: 20px;">
-                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                            <span class="material-symbols-rounded" style="color: #FFB4AB; font-size: 24px;">build</span>
-                            <div><strong>זוהתה הפעלה קודמת שנקטעה:</strong> נמצאו חבילות שהושבתו ולא שוחזרו.</div>
-                        </div>
-                        <button class="btn btn-tonal" style="font-size: 0.85rem; height: 36px;" onclick="emergencyRestoreAccounts()">
-                            <span class="material-symbols-rounded">settings_backup_restore</span> שחזר רכיבים כעת
-                        </button>
-                    </div>
-
                     <div class="list-item"><div class="icon">1</div> חברו את המכשיר למחשב באמצעות כבל USB</div>
                     <div class="list-item"><div class="icon">2</div> הכנסו להגדרות -> מידע על המכשיר</div>
                     <div class="list-item"><div class="icon">3</div> לחצו 7 פעמים על "מספר Build"</div>
@@ -104,30 +109,30 @@
 
             <!-- PAGE 2: Accounts -->
             <div id="page-accounts" class="page">
-                <h2>בדיקת חשבונות</h2>
-                <div class="info-card" style="background: rgba(255, 180, 171, 0.1); color: #ffb4ab;">
-                    <span class="material-symbols-rounded" style="color: #ffb4ab;">warning</span>
-                    <div>חובה להסיר את כל חשבונות Google/Samsung מהמכשיר זמנית. ניתן להחזיר אותם לאחר ההתקנה.</div>
+                <div class="page-title-row">
+                    <h2>בדיקת חשבונות</h2>
                 </div>
 
-                <div class="list-item"><div class="icon">1</div> הכנסו להגדרות -> חשבונות וגיבוי -> נהל חשבונות</div>
-                <div class="list-item"><div class="icon">2</div> בחרו כל חשבון והקישו "הסר חשבון"</div>
+                <!-- Dynamic Account State Hero -->
+                <div id="account-hero-status" class="account-hero-card checking">
+                    <span id="account-hero-icon" class="material-symbols-rounded">sync</span>
+                    <div class="hero-text-content">
+                        <div id="account-hero-title" class="hero-title">סורק חשבונות פעילים במכשיר...</div>
+                        <div id="account-hero-desc" class="hero-desc">מבצע בדיקת עומק של חשבונות המערכת דרך ADB</div>
+                    </div>
+                </div>
+
+                <!-- Step Removal Guide for Manual Mode -->
+                <div id="account-steps-guide" class="account-steps-container">
+                    <div class="list-item"><div class="icon">1</div> הכנסו להגדרות -> חשבונות וגיבוי -> נהל חשבונות</div>
+                    <div class="list-item"><div class="icon">2</div> בחרו כל חשבון והקישו "הסר חשבון" (ניתן להחזיר בסיום ההתקנה)</div>
+                </div>
                 
                 <!-- Account List Container -->
                 <div id="account-list"></div>
                 
                 <!-- Fill space -->
                 <div style="flex-grow: 1;"></div>
-                
-                <!-- Hidden Warning Box for Bypass -->
-                <div id="bypass-warning" class="warning-box" style="margin-bottom: 20px;">
-                    <strong style="display:block; margin-bottom:5px;">⚠️ מצב ניסיוני (Beta)</strong>
-                        פעולה זו תנסה להשבית זמנית את החשבונות במכשיר במקום שתצטרך למחוק אותם. <br>
-                        זה עלול לגרום לקריסות זמניות. החשבונות יופעלו מחדש אוטומטית בסיום ההתקנה.                    <br><br>
-                    <button class="btn btn-tonal" style="font-size: 0.8rem; height: 36px;" onclick="runAccountBypass()">
-                        אני מבין, בצע השבתה זמנית
-                    </button>
-                </div>
 
                 <div class="action-area">
                     <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
@@ -135,9 +140,9 @@
                             <span class="material-symbols-rounded">pending</span> ממתין לבדיקה
                         </div>
                         
-                        <button id="btn-bypass-trigger" class="btn-calm" onclick="toggleBypassWarning()" style="display: none;" title="נסה הסרה אוטומטית (Beta)">
-                            <span class="material-symbols-rounded">auto_fix</span>
-                        התקנה ללא הסרה (Beta)
+                        <button id="btn-bypass-trigger" class="btn-calm" onclick="handleBypassTriggerClick()" style="display: none;" title="התקנה ללא הסרת חשבונות">
+                            <span class="material-symbols-rounded">auto_fix_high</span>
+                            התקנה ללא הסרה (Beta)
                         </button>
                     </div>
 
@@ -260,6 +265,86 @@
             <p id="video-info-text" style="color: var(--md-sys-color-outline); font-size: 0.9rem;">סרטון הדרכה (ייתכנו שינויים בין דגמים)</p>
         </div>
 
+    </div>
+
+    <!-- Bypass Confirmation Modal Dialog -->
+    <div id="modal-bypass-confirm" class="app-modal" role="dialog" aria-modal="true">
+        <div class="modal-backdrop" onclick="closeBypassModal()"></div>
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title-wrap">
+                    <span class="material-symbols-rounded modal-icon-warn">auto_fix_high</span>
+                    <h3>השבתת חשבונות זמנית (Bypass Beta)</h3>
+                </div>
+                <button class="btn-close-modal" onclick="closeBypassModal()" aria-label="סגור">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-lead">
+                    מצב זה מאפשר להגדיר את A-Bloq מבלי למחוק את החשבונות שלכם. שירותי האימות של החשבונות יושבתו באופן זמני בלבד דרך פקודות ADB, וישוחזרו אוטומטית בסיום ההתקנה.
+                </p>
+                <div class="modal-alert-box">
+                    <span class="material-symbols-rounded">security</span>
+                    <div>
+                        <strong>הנתונים שלכם שמורים:</strong> הסיסמאות, הקבצים וההודעות יישארו במכשיר. לא מתבצעת מחיקת מידע.
+                    </div>
+                </div>
+
+                <div class="modal-section-title">רכיבים שיושבתו זמנית לצורך ההתקנה:</div>
+                <div id="bypass-package-preview" class="bypass-preview-box">
+                    <div class="preview-loading">
+                        <span class="spin-icon material-symbols-rounded">sync</span> מכין רשימת רכיבים...
+                    </div>
+                </div>
+                
+                <div class="modal-disclaimer">
+                    ⚠️ במקרים נדירים, אפליקציות מסוימות עלולות להציג הודעת שגיאה זמנית עד לשחזור בסיום התהליך.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-tonal" onclick="closeBypassModal()">ביטול</button>
+                <button id="btn-confirm-bypass" class="btn" onclick="executeBypassFromModal()">
+                    <span class="material-symbols-rounded">bolt</span> הפעל מצב עקיפה והמשך
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Android 14+ Security Restriction Modal Dialog -->
+    <div id="modal-android14-info" class="app-modal" role="dialog" aria-modal="true">
+        <div class="modal-backdrop" onclick="closeAndroid14Modal()"></div>
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title-wrap">
+                    <span class="material-symbols-rounded modal-icon-info">shield</span>
+                    <h3>הגבלת אבטחה ב-Android 14 ומעלה</h3>
+                </div>
+                <button class="btn-close-modal" onclick="closeAndroid14Modal()" aria-label="סגור">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-lead">
+                    בגרסאות אנדרואיד 14 ומעלה (SDK 34+), גוגל חסמה לחלוטין את היכולת להשבית רכיבי מערכת וחשבונות דרך ADB.
+                </p>
+                <div class="modal-instruction-card">
+                    <h4>כיצד להסיר את החשבונות כעת:</h4>
+                    <ol class="instruction-steps">
+                        <li>פתחו את אפליקציית <strong>הגדרות</strong> במכשיר הנייד.</li>
+                        <li>היכנסו לתפריט <strong>חשבונות וגיבוי</strong> -> <strong>ניהול חשבונות</strong>.</li>
+                        <li>לחצו על כל חשבון פעיל (Google, Samsung וכו') והקישו על <strong>הסר חשבון</strong>.</li>
+                        <li>לאחר הסרת החשבונות, חזרו לכאן ולחצו על <strong>בדוק שוב</strong>.</li>
+                    </ol>
+                </div>
+                <p class="text-subtle">
+                    💡 ניתן לחבר מחדש את כל החשבונות מיד לאחר סיום ההתקנה בהצלחה.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeAndroid14Modal()">הבנתי, אבצע הסרה ידנית</button>
+            </div>
+        </div>
     </div>
 
     <!-- Snackbar for Notifications -->

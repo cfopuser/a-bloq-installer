@@ -177,85 +177,373 @@ h2 {
 }
 
 /* --- Account List Styles --- */
-#account-list {
-    margin-top: 20px;
+/* --- Global Emergency Rescue Banner --- */
+.global-rescue-bar {
+    background: linear-gradient(135deg, rgba(255, 180, 171, 0.14) 0%, rgba(255, 152, 0, 0.1) 100%);
+    border: 1px solid rgba(255, 180, 171, 0.4);
+    border-radius: 16px;
+    padding: 14px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    animation: fadeInSlideDown 0.35s cubic-bezier(0.2, 0.9, 0.3, 1);
+    flex-wrap: wrap;
+}
+
+.rescue-bar-content {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1;
+    min-width: 260px;
+}
+
+.rescue-icon {
+    font-size: 30px;
+    color: var(--md-sys-color-error);
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 8px rgba(255, 180, 171, 0.4));
+}
+
+.rescue-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.rescue-text strong {
+    font-size: 0.95rem;
+    color: #FFF;
+}
+
+.rescue-text span {
+    font-size: 0.82rem;
+    color: #C4C6CF;
+}
+
+.btn-rescue-action {
+    background: rgba(255, 180, 171, 0.18);
+    color: #FFD8D3;
+    border: 1px solid rgba(255, 180, 171, 0.5);
+    font-size: 0.85rem;
+    height: 38px;
+    padding: 0 16px;
+    border-radius: var(--border-radius-pill);
+    font-weight: 600;
+}
+
+.btn-rescue-action:hover {
+    background: rgba(255, 180, 171, 0.3);
+    color: #FFF;
+}
+
+/* --- Account Hero Status Card --- */
+.account-hero-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 18px 22px;
+    border-radius: 16px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.account-hero-card .material-symbols-rounded {
+    font-size: 28px;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.hero-text-content {
+    flex: 1;
+}
+
+.hero-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #FFF;
+}
+
+.hero-desc {
+    font-size: 0.88rem;
+    line-height: 1.45;
+    color: #C4C6CF;
+}
+
+/* Account Hero State Variations */
+.account-hero-card.checking {
+    background: rgba(214, 227, 255, 0.08);
+    border-color: rgba(214, 227, 255, 0.25);
+    color: var(--md-sys-color-primary);
+}
+.account-hero-card.checking .material-symbols-rounded {
+    color: var(--md-sys-color-primary);
+    animation: spin 1.2s linear infinite;
+}
+
+.account-hero-card.clean {
+    background: rgba(76, 175, 80, 0.1);
+    border-color: rgba(76, 175, 80, 0.35);
+    box-shadow: 0 0 20px rgba(76, 175, 80, 0.08);
+}
+.account-hero-card.clean .material-symbols-rounded {
+    color: #81C784;
+}
+.account-hero-card.clean .hero-title {
+    color: #A5D6A7;
+}
+
+.account-hero-card.detected {
+    background: rgba(255, 152, 0, 0.08);
+    border-color: rgba(255, 152, 0, 0.3);
+}
+.account-hero-card.detected .material-symbols-rounded {
+    color: #FFB74D;
+}
+.account-hero-card.detected .hero-title {
+    color: #FFE082;
+}
+
+.account-hero-card.blocked-sdk14 {
+    background: rgba(255, 180, 171, 0.1);
+    border-color: rgba(255, 180, 171, 0.35);
+}
+.account-hero-card.blocked-sdk14 .material-symbols-rounded {
+    color: #FFB4AB;
+}
+.account-hero-card.blocked-sdk14 .hero-title {
+    color: #FFD8D3;
+}
+
+.account-hero-card.error {
+    background: rgba(211, 47, 47, 0.12);
+    border-color: rgba(211, 47, 47, 0.4);
+}
+.account-hero-card.error .material-symbols-rounded {
+    color: #EF5350;
+}
+
+/* --- Clean State View --- */
+.account-clean-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 35px 20px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 16px;
+    border: 1px dashed rgba(76, 175, 80, 0.3);
+    margin-top: 10px;
+}
+
+.clean-badge-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: rgba(76, 175, 80, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+    border: 2px solid rgba(76, 175, 80, 0.4);
+    box-shadow: 0 0 25px rgba(76, 175, 80, 0.2);
+}
+
+.clean-badge-icon .material-symbols-rounded {
+    font-size: 38px;
+    color: #81C784;
+}
+
+.clean-title {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #E8F5E9;
+    margin-bottom: 6px;
+}
+
+.clean-subtitle {
+    font-size: 0.88rem;
+    color: var(--md-sys-color-outline);
+    max-width: 420px;
+}
+
+/* --- Skeleton Loader --- */
+.account-skeleton-loader {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    margin-top: 10px;
+}
+.skeleton-row {
+    height: 62px;
+    border-radius: 12px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.07) 50%, rgba(255,255,255,0.03) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* --- Account Steps Guide --- */
+.account-steps-container {
+    margin-bottom: 15px;
+}
+
+/* --- Account List & Cards --- */
+#account-list {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
     padding: 0;
+    max-height: 280px;
+    overflow-y: auto;
 }
 
 .account-card {
     display: flex;
     align-items: center;
-    background: var(--md-sys-color-surface-variant);
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     padding: 12px 16px;
-    border-radius: 12px;
-    border-left: 5px solid var(--md-sys-color-outline);
-    transition: transform 0.2s;
+    border-radius: 14px;
+    border-right: 4px solid var(--md-sys-color-outline);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
-.account-card:hover { transform: translateX(5px); }
+.account-card:hover {
+    transform: translateX(-4px);
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
 .account-icon-wrapper {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     margin-left: 15px;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.08);
     flex-shrink: 0;
+    box-shadow: inset 0 1px 1px rgba(255,255,255,0.15), 0 2px 5px rgba(0,0,0,0.2);
 }
 
-/* Updated to support both Material Font and SVGs */
-.account-icon-wrapper .material-symbols-rounded { font-size: 24px; color: #fff; }
-.account-icon-wrapper svg { width: 22px; height: 22px; fill: #fff; }
+.account-icon-wrapper svg {
+    width: 24px;
+    height: 24px;
+}
 
-.account-info { flex-grow: 1; overflow: hidden; }
-.account-name { font-size: 1rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.account-type { font-size: 0.8rem; color: var(--md-sys-color-outline); display: flex; align-items: center; gap: 5px; }
+.account-info {
+    flex-grow: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
 
-/* Account Brand Colors */
-/* Google (Blue) */
-.acc-google { border-left-color: #4285F4; } 
-.acc-google .account-icon-wrapper { background: #4285F4; }
+.account-header-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
 
-/* Samsung (Dark Blue) */
-.acc-samsung { border-left-color: #1428A0; } 
-.acc-samsung .account-icon-wrapper { background: #1428A0; }
+.account-name {
+    font-size: 0.98rem;
+    font-weight: 600;
+    color: #FFFFFF;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: 0.2px;
+}
 
-/* WhatsApp (Green) */
-.acc-whatsapp { border-left-color: #25D366; } 
-.acc-whatsapp .account-icon-wrapper { background: #25D366; }
+.account-type {
+    font-size: 0.8rem;
+    color: #A0A3AD;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+}
 
-/* Exchange/Office (Office Blue) */
-.acc-exchange { border-left-color: #D83B01; } 
-.acc-exchange .account-icon-wrapper { background: #D83B01; }
+.type-pill {
+    font-family: 'Consolas', monospace;
+    font-size: 0.72rem;
+    background: rgba(0, 0, 0, 0.35);
+    padding: 2px 7px;
+    border-radius: 6px;
+    color: #8E9099;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
 
-/* Telegram (Light Blue) */
-.acc-telegram { border-left-color: #24A1DE; } 
-.acc-telegram .account-icon-wrapper { background: #24A1DE; }
+.acc-tag {
+    font-size: 0.72rem;
+    padding: 3px 9px;
+    border-radius: var(--border-radius-pill);
+    font-weight: 600;
+    white-space: nowrap;
+}
+.acc-tag.tag-manual {
+    background: rgba(255, 180, 171, 0.15);
+    color: #FFB4AB;
+    border: 1px solid rgba(255, 180, 171, 0.3);
+}
+.acc-tag.tag-bypassable {
+    background: rgba(255, 249, 196, 0.15);
+    color: #FFF9C4;
+    border: 1px solid rgba(255, 249, 196, 0.3);
+}
 
-/* X / Twitter (Black) */
-.acc-twitter { border-left-color: #000000; }
-.acc-twitter .account-icon-wrapper { background: #000000; }
+/* Brand Accent Borders & Wrappers */
+.acc-google { border-right-color: #4285F4; }
+.acc-google .account-icon-wrapper { background: rgba(66, 133, 244, 0.12); }
 
-/* Facebook (Blue) */
-.acc-facebook { border-left-color: #1877F2; }
-.acc-facebook .account-icon-wrapper { background: #1877F2; }
+.acc-samsung { border-right-color: #1428A0; }
+.acc-samsung .account-icon-wrapper { background: rgba(20, 40, 160, 0.2); }
 
-/* Xiaomi (Orange) */
-.acc-xiaomi { border-left-color: #FF6900; }
-.acc-xiaomi .account-icon-wrapper { background: #FF6900; }
+.acc-microsoft { border-right-color: #00A4EF; }
+.acc-microsoft .account-icon-wrapper { background: rgba(0, 164, 239, 0.15); }
 
-/* TikTok (Black/Pink mix - simplified to black) */
-.acc-tiktok { border-left-color: #000000; }
-.acc-tiktok .account-icon-wrapper { background: #000000; }
+.acc-whatsapp { border-right-color: #25D366; }
+.acc-whatsapp .account-icon-wrapper { background: rgba(37, 211, 102, 0.15); }
 
-/* Unknown / Generic (Grey) */
-.acc-unknown { border-left-color: #607D8B; }
-.acc-unknown .account-icon-wrapper { background: #607D8B; }
+.acc-telegram { border-right-color: #24A1DE; }
+.acc-telegram .account-icon-wrapper { background: rgba(36, 161, 222, 0.15); }
+
+.acc-xiaomi { border-right-color: #FF6900; }
+.acc-xiaomi .account-icon-wrapper { background: rgba(255, 105, 0, 0.15); }
+
+.acc-facebook { border-right-color: #1877F2; }
+.acc-facebook .account-icon-wrapper { background: rgba(24, 119, 242, 0.15); }
+
+.acc-huawei { border-right-color: #CF0A2C; }
+.acc-huawei .account-icon-wrapper { background: rgba(207, 10, 44, 0.15); }
+
+.acc-work { border-right-color: #5C6BC0; }
+.acc-work .account-icon-wrapper { background: rgba(92, 107, 192, 0.15); }
+
+.acc-exchange { border-right-color: #FB8C00; }
+.acc-exchange .account-icon-wrapper { background: rgba(251, 140, 0, 0.15); }
+
+.acc-unknown { border-right-color: #74777F; }
+.acc-unknown .account-icon-wrapper { background: rgba(116, 119, 127, 0.15); }
+
 /* --- Right Panel (Phone Frame) --- */
 .phone-panel {
     display: flex;
@@ -655,4 +943,260 @@ video { width: 100%; height: 100%; object-fit: cover; }
         background: var(--md-sys-color-surface);
         border-top: 1px solid var(--md-sys-color-surface-variant);
     }
+}
+
+/* ========================================= */
+/*       MODAL DIALOG SYSTEM (MD3)           */
+/* ========================================= */
+
+.app-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.app-modal.active {
+    display: flex;
+}
+
+.modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    animation: fadeIn 0.25s ease-out;
+}
+
+.modal-dialog {
+    position: relative;
+    z-index: 1001;
+    background: #1E2024;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 24px;
+    width: 100%;
+    max-width: 520px;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.65), 0 0 1px 1px rgba(255, 255, 255, 0.08);
+    animation: modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.modal-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.modal-title-wrap h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #FFFFFF;
+}
+
+.modal-icon-warn {
+    font-size: 26px;
+    color: #FFB74D;
+}
+
+.modal-icon-info {
+    font-size: 26px;
+    color: var(--md-sys-color-primary);
+}
+
+.btn-close-modal {
+    background: transparent;
+    border: none;
+    color: var(--md-sys-color-outline);
+    cursor: pointer;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.btn-close-modal:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #FFF;
+}
+
+.modal-body {
+    padding: 22px 24px;
+    overflow-y: auto;
+    font-size: 0.92rem;
+    line-height: 1.55;
+    color: #C4C6CF;
+}
+
+.modal-lead {
+    font-size: 0.95rem;
+    color: #E2E2E6;
+    margin-top: 0;
+    margin-bottom: 16px;
+}
+
+.modal-alert-box {
+    background: rgba(76, 175, 80, 0.08);
+    border: 1px solid rgba(76, 175, 80, 0.25);
+    border-radius: 12px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px;
+    font-size: 0.88rem;
+    color: #C8E6C9;
+}
+
+.modal-alert-box .material-symbols-rounded {
+    color: #81C784;
+    font-size: 22px;
+    flex-shrink: 0;
+}
+
+.modal-section-title {
+    font-weight: 600;
+    color: #FFF;
+    font-size: 0.88rem;
+    margin-bottom: 8px;
+}
+
+.bypass-preview-box {
+    background: #141518;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 12px 14px;
+    max-height: 140px;
+    overflow-y: auto;
+    font-family: 'Consolas', monospace;
+    font-size: 0.82rem;
+    margin-bottom: 14px;
+}
+
+.preview-pkg-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    color: #90CAF9;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.preview-pkg-item:last-child {
+    border-bottom: none;
+}
+
+.preview-pkg-item .material-symbols-rounded {
+    font-size: 16px;
+    color: #FFB74D;
+}
+
+.modal-disclaimer {
+    font-size: 0.8rem;
+    color: #9E9E9E;
+    line-height: 1.4;
+}
+
+.modal-instruction-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+}
+
+.modal-instruction-card h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: var(--md-sys-color-primary);
+    font-size: 0.95rem;
+}
+
+.instruction-steps {
+    margin: 0;
+    padding-right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    color: #E2E2E6;
+}
+
+.text-subtle {
+    font-size: 0.85rem;
+    color: var(--md-sys-color-outline);
+    margin: 0;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.btn-calm-info {
+    --bg-color: rgba(214, 227, 255, 0.12);
+    --text-color: #D6E3FF;
+    --border-color: rgba(214, 227, 255, 0.3);
+    border: 1px solid var(--border-color);
+}
+
+.btn-calm-info:hover {
+    background: rgba(214, 227, 255, 0.2);
+    color: #FFF;
+}
+
+/* Animations */
+@keyframes modalPop {
+    from {
+        opacity: 0;
+        transform: scale(0.92) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes fadeInSlideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
