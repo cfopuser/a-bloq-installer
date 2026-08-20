@@ -173,6 +173,18 @@
                     <div class="progress-fill" id="install-progress-bar"></div>
                 </div>
 
+                <!-- Manual APK Fallback Container -->
+                <div id="manual-apk-box" class="warning-box" style="display: none; margin-top: 15px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                        <span class="material-symbols-rounded" style="color: #FFB4AB; font-size: 24px;">info</span>
+                        <div>טעינת הקובץ מהרשת נכשלה. באפשרותך לבחור קובץ APK ידנית מהמחשב:</div>
+                    </div>
+                    <label class="btn btn-tonal" style="cursor: pointer; height: 40px; font-size: 0.9rem;">
+                        <span class="material-symbols-rounded">file_open</span> בחר קובץ APK מהמחשב
+                        <input type="file" id="manual-apk-input" accept=".apk" style="display: none;" onchange="handleManualApkSelect(this)">
+                    </label>
+                </div>
+
                 <div class="action-area">
                     <div style="display: flex; gap: 10px; align-items: center;">
                         <div class="status-badge">

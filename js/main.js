@@ -2,7 +2,7 @@
 import { navigateTo, toggleVideo, log, showToast, copyLogToClipboard } from './ui.js';
 import { connectAdb } from './adb-client.js';
 import { checkAccounts, runAccountBypass } from './accounts.js';
-import { checkForUpdates, startDownload, runInstallation } from './installer.js';
+import { checkForUpdates, startDownload, runInstallation, setManualApkFile } from './installer.js';
 import { appState, restoreSessionState } from './state.js';
 
 // 1. ATTACH TO WINDOW IMMEDIATELY
@@ -14,6 +14,11 @@ window.runAccountBypass = runAccountBypass;
 window.startDownload = startDownload;
 window.runInstallation = runInstallation;
 window.copyLogToClipboard = copyLogToClipboard;
+window.handleManualApkSelect = (input) => {
+    if (input && input.files && input.files[0]) {
+        setManualApkFile(input.files[0]);
+    }
+};
 
 // Handle the "Install without removal" button click
 window.toggleBypassWarning = () => {

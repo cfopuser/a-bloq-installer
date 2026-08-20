@@ -2,9 +2,17 @@ export const CONFIG = {
     ENABLE_WEB_UPDATE: false,
     GITHUB_USERNAME: "sesese1234",
     GITHUB_REPO_NAME: "SecureGuardMDM",
+    FALLBACK_GITHUB_USERNAME: "another-weird-dude",
+    INSTALLER_REPO_OWNER: "cfopuser",
+    INSTALLER_REPO_NAME: "a-bloq-installer",
     TARGET_PACKAGE: "com.secureguard.mdm",
     DEVICE_ADMIN: ".SecureGuardDeviceAdminReceiver",
-    APK_LOCAL_PATH: "apk/normal.apk"
+    APK_LOCAL_PATH: "apk/normal.apk",
+    APK_FALLBACK_URLS: [
+        "https://cdn.jsdelivr.net/gh/cfopuser/a-bloq-installer@main/apk/normal.apk",
+        "https://raw.githubusercontent.com/cfopuser/a-bloq-installer/main/apk/normal.apk",
+        "https://github.com/sesese1234/SecureGuardMDM/releases/latest/download/Abloq-release.apk"
+    ]
 };
 
 // Packages that must NEVER be disabled

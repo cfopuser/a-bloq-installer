@@ -24,7 +24,8 @@ This repository contains a static, WebUSB/WebADB-based web installer for the A-B
 
 ### 5. APK Retrieval
 - **Automatic GitHub Workflow**: The GitHub Actions workflow [main.yml](file:///c:/Users/User/Documents/Projects/abloq-installer/a-bloq-installer/.github/workflows/main.yml) runs every 30 minutes to pull the latest release APK from `another-weird-dude/SecureGuardMDM` and commit it directly to `apk/normal.apk`.
-- **Cache Busting**: Fetching the local APK appends a timestamp query parameter (`?t=${Date.now()}`) to bypass proxy/filter range request delivery issues.
+- **Multi-Tier Resilient Fetching**: `fetchApkBlobWithFallbacks` in [installer.js](file:///c:/Users/User/Documents/Projects/abloq-installer/a-bloq-installer/js/installer.js) resolves the base-relative local path, fails over to CDN/GitHub raw mirrors (`APK_FALLBACK_URLS`), queries GitHub Releases API, and supports manual `.apk` file selection.
+- **Cache Busting & Streaming**: Fetches include `?t=${Date.now()}` and stream via `ReadableStream` to calculate real-time download percentage and byte counters.
 
 ---
 
