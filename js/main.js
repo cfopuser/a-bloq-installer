@@ -1,7 +1,7 @@
 // js/main.js
 import { navigateTo, toggleVideo, log, showToast, copyLogToClipboard } from './ui.js';
 import { connectAdb } from './adb-client.js';
-import { checkAccounts, runAccountBypass } from './accounts.js';
+import { checkAccounts, runAccountBypass, restoreAccounts } from './accounts.js';
 import { checkForUpdates, startDownload, runInstallation, setManualApkFile } from './installer.js';
 import { appState, restoreSessionState } from './state.js';
 
@@ -20,6 +20,17 @@ window.handleManualApkSelect = (input) => {
     }
 };
 
+window.emergencyRestoreAccounts = async () => {
+    if (!appState.adbConnected) {
+        showToast("יש לחבר את המכשיר תחילה");
+        return;
+    }
+    await restoreAccounts();
+    const box = document.getElementById('emergency-restore-box');
+    if (box) box.style.display = 'none';
+    showToast("כל הרכיבים שוחזרו בהצלחה");
+};
+
 // Handle the "Install without removal" button click
 window.toggleBypassWarning = () => {
     // Check for Android 14+ (SDK 34)
@@ -34,22 +45,17 @@ window.toggleBypassWarning = () => {
 
 // 2. INITIALIZE
 document.addEventListener('DOMContentLoaded', () => {
-    // Per user request, wipe storage on every load to ensure a clean state.
-    try {
-        localStorage.clear();
-    } catch (e) {
-        console.error("Failed to clear local storage:", e);
-    }
-
     // Check Browser
     if (!('usb' in navigator)) {
         document.getElementById('page-main-content').style.display = 'none';
         document.getElementById('compatibility-notice').style.display = 'block';
     }
 
-    // Restore previous session if crashed
+    // Check if previous session was interrupted with disabled packages
     const restoredCount = restoreSessionState();
     if (restoredCount > 0) {
-        log(`נמצאה הפעלה קודמת שנקטעה: ${restoredCount} חבילות מושבתות.`, 'warn');
+        const box = document.getElementById('emergency-restore-box');
+        if (box) box.style.display = 'block';
+        log(`נמצאה הפעלה קודמת שנקטעה: ${restoredCount} רכיבים מושבתים במכשיר.`, 'warn');
     }
 });

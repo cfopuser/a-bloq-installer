@@ -27,7 +27,12 @@ export async function connectAdb() {
             appState.adbConnected = true;
 
             showToast("המכשיר חובר בהצלחה");
-            restoreSessionState();
+            const restoredCount = restoreSessionState();
+            if (restoredCount > 0) {
+                const box = document.getElementById('emergency-restore-box');
+                if (box) box.style.display = 'block';
+                log(`אזהרה: זוהו ${restoredCount} רכיבים שהושבתו בהפעלה קודמת. ניתן לשחזרם באמצעות הכפתור שנוסף.`, 'warn');
+            }
         }
     } catch (e) {
         showToast("שגיאה בחיבור: " + e.message);

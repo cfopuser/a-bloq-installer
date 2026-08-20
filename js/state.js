@@ -6,25 +6,42 @@ export const appState = {
     disabledPackages: [],
     adbInstance: null,
     webUsbInstance: null,
-    sdkVersion: 0 // Added to track Android Version
+    sdkVersion: 0 // Track Android SDK Version
 };
 
 export function saveSessionState() {
-    localStorage.setItem('mdm_disabled_packages', JSON.stringify(appState.disabledPackages));
+    try {
+        if (appState.disabledPackages.length > 0) {
+            localStorage.setItem('mdm_disabled_packages', JSON.stringify(appState.disabledPackages));
+        } else {
+            localStorage.removeItem('mdm_disabled_packages');
+        }
+    } catch (e) {
+        console.error("Failed to save session state", e);
+    }
 }
 
 export function restoreSessionState() {
-    const saved = localStorage.getItem('mdm_disabled_packages');
-    if (saved) {
-        try {
+    try {
+        const saved = localStorage.getItem('mdm_disabled_packages');
+        if (saved) {
             const parsed = JSON.parse(saved);
             if (Array.isArray(parsed) && parsed.length > 0) {
                 appState.disabledPackages = parsed;
-                return parsed.length; // Return count so UI can log it
+                return parsed.length; // Return count of disabled packages
             }
-        } catch (e) {
-            console.error("Failed to restore session", e);
         }
+    } catch (e) {
+        console.error("Failed to restore session state", e);
     }
     return 0;
+}
+
+export function clearSessionState() {
+    appState.disabledPackages = [];
+    try {
+        localStorage.removeItem('mdm_disabled_packages');
+    } catch (e) {
+        console.error("Failed to clear session state", e);
+    }
 }

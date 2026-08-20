@@ -37,15 +37,48 @@ export const KNOWN_OFFENDERS = [
     'com.samsung.android.email.provider'
 ];
 
-// Static mapping for account types
+// Static fallback mapping for account types when dynamic discovery isn't available
 export const ACCOUNT_PKG_MAP = {
+    // Google
     'com.google': 'com.google.android.gms', 
     'com.google.work': 'com.google.android.gms',
+    'com.google.android.gm.pop3': 'com.google.android.gm',
+    'com.google.android.gm.exchange': 'com.google.android.gm',
+    'com.google.android.gm.legacyimap': 'com.google.android.gm',
+    'com.google.android.apps.tachyon': 'com.google.android.apps.tachyon',
+    // Samsung
     'com.osp.app.signin': 'com.samsung.android.mobileservice', 
     'com.samsung.android.mobileservice': 'com.samsung.android.mobileservice',
+    'com.samsung.android.scloud': 'com.samsung.android.scloud',
+    'com.samsung.android.email': 'com.samsung.android.email.provider',
+    'com.samsung.android.email.provider': 'com.samsung.android.email.provider',
+    // Xiaomi / MIUI
+    'com.xiaomi': 'com.xiaomi.account',
+    'com.xiaomi.account': 'com.xiaomi.account',
+    'com.miui.cloudservice': 'com.miui.cloudservice',
+    // Huawei / Honor
+    'com.huawei.hwid': 'com.huawei.hwid',
+    // Microsoft
+    'com.microsoft.office.outlook': 'com.microsoft.office.outlook',
+    'com.microsoft.workaccount': 'com.azure.authenticator',
+    'com.microsoft.skydrive': 'com.microsoft.skydrive',
+    'com.microsoft.teams': 'com.microsoft.teams',
+    // Messaging & Social
     'com.whatsapp': 'com.whatsapp',
+    'com.whatsapp.w4b': 'com.whatsapp.w4b',
     'com.facebook.auth.login': 'com.facebook.katana',
-    'com.facebook.messenger': 'com.facebook.orca'
+    'com.facebook.messenger': 'com.facebook.orca',
+    'com.instagram.android': 'com.instagram.android',
+    'us.zoom.videomeetings': 'us.zoom.videomeetings',
+    'org.telegram.messenger': 'org.telegram.messenger',
+    'org.telegram.plus': 'org.telegram.plus',
+    'org.thunderdog.challegram': 'org.thunderdog.challegram',
+    'com.viber.voip': 'com.viber.voip',
+    'com.skype.raider': 'com.skype.raider',
+    'com.snapchat.android': 'com.snapchat.android',
+    'com.twitter.android': 'com.twitter.android',
+    'com.spotify.music': 'com.spotify.music',
+    'com.duolingo': 'com.duolingo'
 };
 
 export const ADB_ERRORS = {
@@ -57,6 +90,6 @@ export const ADB_ERRORS = {
     "not found": "המכשיר התנתק. בדוק את תקינות הכבל.",
     "there are already some accounts": "שגיאה: נמצאו חשבונות פעילים. חובה להסירם.",
     "already a device owner": "שגיאה: כבר קיים מנהל מכשיר (Device Owner). יש לבצע איפוס יצרן.",
-    "java.lang.IllegalStateException": "שגיאה קריטית (IllegalStateException). חלה תקלה בעת הסרת חשבונות אנא וודאו שכול החשבונות הוסרו מהמכשיר.",
+    "java.lang.IllegalStateException": "שגיאה קריטית (IllegalStateException). חלה תקלה בעת הגדרת ניהול המכשיר.",
     "Trying to set the device owner": "שגיאה: הגדרת הבעלים נכשלה. המכשיר אינו 'נקי' מחשבונות."
 };

@@ -32,3 +32,7 @@ This repository contains a static, WebUSB/WebADB-based web installer for the A-B
 ## 🛠️ Verification & Testing
 - Use Google Chrome, Microsoft Edge, or Opera (WebUSB-compatible browsers). Firefox and Safari do not support WebUSB.
 - Testing requires a physical Android device connected via USB with "USB Debugging" enabled under Developer Options.
+
+
+## conversing with the user
+converse with the user in english

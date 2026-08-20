@@ -67,6 +67,17 @@
                 </div>
 
                 <div style="flex-grow: 1;">
+                    <!-- Emergency Restore Banner (shown if previous session was interrupted) -->
+                    <div id="emergency-restore-box" class="warning-box" style="display: none; margin-bottom: 20px;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                            <span class="material-symbols-rounded" style="color: #FFB4AB; font-size: 24px;">build</span>
+                            <div><strong>זוהתה הפעלה קודמת שנקטעה:</strong> נמצאו חבילות שהושבתו ולא שוחזרו.</div>
+                        </div>
+                        <button class="btn btn-tonal" style="font-size: 0.85rem; height: 36px;" onclick="emergencyRestoreAccounts()">
+                            <span class="material-symbols-rounded">settings_backup_restore</span> שחזר רכיבים כעת
+                        </button>
+                    </div>
+
                     <div class="list-item"><div class="icon">1</div> חברו את המכשיר למחשב באמצעות כבל USB</div>
                     <div class="list-item"><div class="icon">2</div> הכנסו להגדרות -> מידע על המכשיר</div>
                     <div class="list-item"><div class="icon">3</div> לחצו 7 פעמים על "מספר Build"</div>
@@ -173,6 +184,23 @@
                     <div class="progress-fill" id="install-progress-bar"></div>
                 </div>
 
+                <!-- Installation Failure / Recovery Container -->
+                <div id="install-error-box" class="warning-box" style="display: none; margin-top: 15px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <span class="material-symbols-rounded" style="color: #FFB4AB; font-size: 24px;">error</span>
+                        <div id="install-error-title" style="font-weight: 500; font-size: 1rem;">ההתקנה נכשלה</div>
+                    </div>
+                    <div id="install-error-desc" style="font-size: 0.9rem; color: #E1E2EC; margin-bottom: 12px;"></div>
+                    <div id="install-error-actions" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button id="btn-err-back-accounts" class="btn btn-tonal" style="font-size: 0.85rem; height: 36px; display: none;" onclick="navigateTo('page-accounts', 2)">
+                            <span class="material-symbols-rounded">arrow_forward</span> חזור למסך חשבונות
+                        </button>
+                        <button id="btn-err-retry" class="btn" style="font-size: 0.85rem; height: 36px;" onclick="runInstallation()">
+                            <span class="material-symbols-rounded">refresh</span> נסה שוב
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Manual APK Fallback Container -->
                 <div id="manual-apk-box" class="warning-box" style="display: none; margin-top: 15px;">
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
@@ -235,6 +263,7 @@
     </div>
 
     <!-- Snackbar for Notifications -->
+    <div id="snackbar"></div>
 
     <script src="js/webadb.js"></script> 
     <script type="module" src="js/main.js"></script>
@@ -247,8 +276,6 @@
         }
     </script>
     <script data-goatcounter="https://cfopuser.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
-
-
 
 </body>
 </html>

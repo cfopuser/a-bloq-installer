@@ -1,4 +1,4 @@
-import { appState, saveSessionState } from './state.js';
+import { appState, saveSessionState, clearSessionState, restoreSessionState } from './state.js';
 import { executeAdbCommand, wait } from './adb-client.js';
 import { log, showToast, updateStatusBadge, navigateTo } from './ui.js';
 import { PROTECTED_PACKAGES, KNOWN_OFFENDERS, ACCOUNT_PKG_MAP } from './config.js';
@@ -11,62 +11,207 @@ const ICONS = {
 };
 
 function getAccountVisuals(type) {
-    const t = type.toLowerCase();
-    if (t.includes('google')) return { label: 'Google', html: ICONS.google, class: 'acc-google' };
+    const t = (type || '').toLowerCase();
+    if (t.includes('google') || t.includes('gmail')) return { label: 'Google', html: ICONS.google, class: 'acc-google' };
     if (t.includes('samsung') || t.includes('osp')) return { label: 'Samsung', html: ICONS.samsung, class: 'acc-samsung' };
+    if (t.includes('xiaomi') || t.includes('miui')) return { label: 'Xiaomi', html: ICONS.generic, class: 'acc-unknown' };
+    if (t.includes('microsoft') || t.includes('outlook')) return { label: 'Microsoft', html: ICONS.generic, class: 'acc-unknown' };
+    if (t.includes('whatsapp')) return { label: 'WhatsApp', html: ICONS.generic, class: 'acc-unknown' };
     return { label: type, html: ICONS.generic, class: 'acc-unknown' };
 }
 
-// --- Logic ---
+// --- Dynamic Parser Helpers ---
 
-async function getAllAccountData() {
+/**
+ * Fetch account dump output from dumpsys account
+ */
+async function getAccountDump() {
     let output = "";
     try {
-        output += await executeAdbCommand("cmd account list --user 0", "Scan User 0", true) + "\n";
-        output += await executeAdbCommand("cmd account list", "Scan General", true) + "\n";
-        output += await executeAdbCommand("dumpsys account", "Deep Dump", true) + "\n";
-    } catch (e) { console.warn(e); }
+        output = await executeAdbCommand("dumpsys account", "Deep Dump", true);
+    } catch (e) {
+        console.warn("dumpsys account query error:", e);
+    }
     return output;
 }
+
+/**
+ * Parse active account entries from ADB dumpsys output
+ * Returns Array<{ name: string, type: string }>
+ */
+function parseActiveAccounts(rawOutput) {
+    const unique = new Map();
+    if (!rawOutput) return [];
+
+    // Pattern 1: Account {name=foo@gmail.com, type=com.google}
+    const accountRegex = /Account\s*\{?\s*name[=:]\s*([^\s,]+)[^}]*?type[=:]\s*([^\s,}]+)/gi;
+    for (const m of rawOutput.matchAll(accountRegex)) {
+        if (m[1] && m[2]) {
+            const name = m[1].trim();
+            const type = m[2].trim();
+            unique.set(`${name}|${type}`, { name, type });
+        }
+    }
+
+    // Pattern 2: Generic fallback regex for lines like: name=user@test.com, type=com.google
+    if (unique.size === 0) {
+        const fallbackRegex = /name=([^\s,]+)[^}]*?type=([^\s}]+)/gi;
+        for (const m of rawOutput.matchAll(fallbackRegex)) {
+            if (m[1] && m[2]) {
+                const name = m[1].trim();
+                const type = m[2].trim();
+                unique.set(`${name}|${type}`, { name, type });
+            }
+        }
+    }
+
+    return Array.from(unique.values());
+}
+
+/**
+ * Extract type -> packageName mapping dynamically from dumpsys account
+ */
+function parseAuthenticatorMapping(dumpsysOutput) {
+    const map = new Map();
+    if (!dumpsysOutput) return map;
+
+    // Pattern 1: AuthenticatorDescription {type=com.google, packageName=com.google.android.gms, ...}
+    const descRegex = /AuthenticatorDescription\s*\{\s*type=([^,\s]+),\s*packageName=([^,\s]+)/gi;
+    for (const match of dumpsysOutput.matchAll(descRegex)) {
+        if (match[1] && match[2]) {
+            map.set(match[1].trim(), match[2].trim());
+        }
+    }
+
+    // Pattern 2: ComponentInfo{com.pkg.name/...} ... type=com.pkg.type
+    const serviceRegex = /ComponentInfo\{([^\/\}]+)\/[^\}]+\}[\s\S]{1,400}?type=([^\s,]+)/gi;
+    for (const match of dumpsysOutput.matchAll(serviceRegex)) {
+        if (match[1] && match[2]) {
+            const pkg = match[1].trim();
+            const type = match[2].trim();
+            if (!map.has(type)) {
+                map.set(type, pkg);
+            }
+        }
+    }
+
+    return map;
+}
+
+/**
+ * Get Set of all installed packages on device
+ */
+async function getInstalledPackages() {
+    const set = new Set();
+    try {
+        const out = await executeAdbCommand("pm list packages", "Get Installed Packages", true);
+        const lines = out.split(/\r?\n/);
+        for (const line of lines) {
+            const trimmed = line.trim();
+            if (trimmed.startsWith("package:")) {
+                set.add(trimmed.substring(8).trim());
+            }
+        }
+    } catch (e) {
+        console.warn("Failed to get installed packages:", e);
+    }
+    return set;
+}
+
+/**
+ * Resolve the backing package for an account type using multi-tier strategies
+ */
+function resolvePackageForAccount(accountType, authMap, installedPackages) {
+    if (!accountType) return null;
+
+    // 1. Dynamic authenticator map from dumpsys
+    if (authMap.has(accountType)) {
+        const pkg = authMap.get(accountType);
+        if (installedPackages.size === 0 || installedPackages.has(pkg)) {
+            return pkg;
+        }
+    }
+
+    // 2. Curated mapping
+    if (ACCOUNT_PKG_MAP[accountType]) {
+        const pkg = ACCOUNT_PKG_MAP[accountType];
+        if (installedPackages.size === 0 || installedPackages.has(pkg)) {
+            return pkg;
+        }
+    }
+
+    // 3. Direct match: account type is itself an installed package
+    if (installedPackages.has(accountType)) {
+        return accountType;
+    }
+
+    // 4. Stem matching: Check if account type starts with an installed package (e.g. com.outfit7.talkingtomgoldrun.account -> com.outfit7.talkingtomgoldrun)
+    for (const pkg of installedPackages) {
+        if (accountType === pkg || accountType.startsWith(pkg + '.')) {
+            return pkg;
+        }
+    }
+
+    // 5. Strip common suffixes (.account, .sync, .login, .auth, .provider) and test
+    const stripped = accountType.replace(/\.(account|sync|login|auth|provider|exchange|pop3|legacyimap)$/i, '');
+    if (installedPackages.has(stripped)) {
+        return stripped;
+    }
+
+    // 6. Substring match across packages
+    for (const pkg of installedPackages) {
+        if (pkg.startsWith(stripped)) {
+            return pkg;
+        }
+    }
+
+    // Fallback: if accountType looks like a package (contains dots)
+    if (accountType.includes('.')) {
+        return accountType;
+    }
+
+    return null;
+}
+
+// --- Public Operations ---
 
 export async function checkAccounts() {
     if (!appState.adbConnected) return showToast("ADB לא מחובר");
     
     const listDiv = document.getElementById('account-list');
     const bypassBtn = document.getElementById('btn-bypass-trigger');
+    const nextBtn = document.getElementById('btn-next-acc');
     
     updateStatusBadge('account-status', 'בודק...', '');
-    bypassBtn.style.display = 'none';
-    listDiv.innerHTML = '';
+    if (bypassBtn) bypassBtn.style.display = 'none';
+    if (listDiv) listDiv.innerHTML = '';
 
     try {
-        const output = await getAllAccountData();
-        const accountRegex = /(?:name=([^\s,]+)[^}]*type=([^\s}]+))/gi;
-        const matches = [...output.matchAll(accountRegex)];
-        
-        const unique = new Map();
-        matches.forEach(m => unique.set(`${m[1]}|${m[2]}`, {name: m[1], type: m[2]}));
+        const rawDump = await getAccountDump();
+        const accounts = parseActiveAccounts(rawDump);
 
-        if (unique.size === 0) {
+        if (accounts.length === 0) {
             updateStatusBadge('account-status', 'מכשיר נקי', 'success');
-            document.getElementById('btn-next-acc').disabled = false;
+            if (nextBtn) nextBtn.disabled = false;
             appState.accountsClean = true;
-            listDiv.innerHTML = `<div style="text-align:center; padding:20px; color:#81C784;"><span class="material-symbols-rounded">check_circle</span><p>נקי מחשבונות</p></div>`;
+            if (listDiv) {
+                listDiv.innerHTML = `<div style="text-align:center; padding:20px; color:#81C784;"><span class="material-symbols-rounded">check_circle</span><p>נקי מחשבונות</p></div>`;
+            }
         } else {
-            updateStatusBadge('account-status', `נמצאו ${unique.size} חשבונות`, 'error');
+            updateStatusBadge('account-status', `נמצאו ${accounts.length} חשבונות`, 'error');
             
-            // Show bypass button (Note: Logic to block SDK 34+ is in the click handler in main.js)
-            bypassBtn.style.display = 'inline-flex';
+            // Show bypass button (Note: block SDK 34+ when clicked)
+            if (bypassBtn) bypassBtn.style.display = 'inline-flex';
             
             appState.accountsClean = false;
-            document.getElementById('btn-next-acc').disabled = true;
+            if (nextBtn) nextBtn.disabled = true;
 
             let html = '';
-            unique.forEach(acc => {
+            accounts.forEach(acc => {
                 const vis = getAccountVisuals(acc.type);
-                html += `<div class="account-card ${vis.class}"><div class="account-icon-wrapper">${vis.html}</div><div class="account-info"><div class="account-name">${acc.name}</div><div class="account-type">${vis.label}</div></div></div>`;
+                html += `<div class="account-card ${vis.class}"><div class="account-icon-wrapper">${vis.html}</div><div class="account-info"><div class="account-name">${acc.name}</div><div class="account-type">${vis.label} (${acc.type})</div></div></div>`;
             });
-            listDiv.innerHTML = html;
+            if (listDiv) listDiv.innerHTML = html;
         }
     } catch (e) {
         showToast("שגיאה בבדיקה");
@@ -77,38 +222,87 @@ export async function checkAccounts() {
 export async function runAccountBypass() {
     if (!appState.adbConnected) return;
 
-    // Double check for Android 14+ just in case the UI check was bypassed
+    // Block on Android 14+ (SDK >= 34)
     if (appState.sdkVersion >= 34) {
         showToast("פעולה זו אינה זמינה באנדרואיד 14+");
-        document.getElementById('bypass-warning').style.display = 'none';
+        const warnBox = document.getElementById('bypass-warning');
+        if (warnBox) warnBox.style.display = 'none';
         return;
     }
 
-    document.getElementById('bypass-warning').style.display = 'none';
+    const warnBox = document.getElementById('bypass-warning');
+    if (warnBox) warnBox.style.display = 'none';
     updateStatusBadge('account-status', 'מבצע השבתה...', '');
 
     try {
-        const output = await getAllAccountData();
-        let packagesToDisable = new Set();
-        
-        // Regex for packages/types
-        const fuzzy = /(?:type=([^\s}]+))|([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi;
-        const matches = [...output.matchAll(fuzzy)];
+        log("סורק חשבונות פעילים במכשיר...", 'info');
+        const rawDump = await getAccountDump();
+        const activeAccounts = parseActiveAccounts(rawDump);
 
-        for (const m of matches) {
-            if (m[1]) { // Type match
-                const pkg = ACCOUNT_PKG_MAP[m[1]] || (m[1].includes('.') ? m[1] : null);
-                if (pkg) packagesToDisable.add(pkg);
+        if (activeAccounts.length === 0) {
+            appState.accountsClean = true;
+            showToast("המכשיר כבר נקי מחשבונות");
+            navigateTo('page-update', 3);
+            return;
+        }
+
+        log("מאתר חבילות שירותי אימות...", 'info');
+        const installedPackages = await getInstalledPackages();
+        const authMap = parseAuthenticatorMapping(rawDump);
+
+        const packagesToDisable = new Set();
+        let hasGoogleAccount = false;
+        let hasSamsungAccount = false;
+
+        // 1. Resolve packages for each active account
+        for (const acc of activeAccounts) {
+            if (acc.type.toLowerCase().includes('google')) hasGoogleAccount = true;
+            if (acc.type.toLowerCase().includes('samsung') || acc.type.toLowerCase().includes('osp')) hasSamsungAccount = true;
+
+            const pkg = resolvePackageForAccount(acc.type, authMap, installedPackages);
+            if (pkg) {
+                // Pre-flight safety: Check if protected
+                if (PROTECTED_PACKAGES.some(p => pkg === p || pkg.startsWith(p + '.'))) {
+                    log(`חבילת מערכת מוגנת זוהתה: ${pkg} עבור חשבון ${acc.name}. חובה להסיר ידנית.`, 'warn');
+                } else {
+                    packagesToDisable.add(pkg);
+                }
+            } else {
+                log(`לא נמצאה חבילה עבור סוג החשבון: ${acc.type}`, 'warn');
             }
         }
 
-        // Add Known Offenders
-        for (const off of KNOWN_OFFENDERS) {
-            const check = await executeAdbCommand(`pm list packages ${off}`, `Checking ${off}`, true);
-            if (check.includes(off)) packagesToDisable.add(off);
+        // Add companion Google services if Google account is present
+        if (hasGoogleAccount) {
+            ['com.google.android.gms', 'com.google.android.gsf', 'com.google.android.apps.tachyon', 'com.google.android.gm'].forEach(p => {
+                if (installedPackages.has(p) && !PROTECTED_PACKAGES.includes(p)) packagesToDisable.add(p);
+            });
         }
 
-        let count = 0;
+        // Add companion Samsung services if Samsung account is present
+        if (hasSamsungAccount) {
+            ['com.samsung.android.mobileservice', 'com.osp.app.signin', 'com.samsung.android.scloud', 'com.samsung.android.authfw', 'com.samsung.android.coreapps'].forEach(p => {
+                if (installedPackages.has(p) && !PROTECTED_PACKAGES.includes(p)) packagesToDisable.add(p);
+            });
+        }
+
+        // 2. Also check Known Offenders
+        for (const off of KNOWN_OFFENDERS) {
+            if (installedPackages.has(off) && !PROTECTED_PACKAGES.includes(off)) {
+                packagesToDisable.add(off);
+            }
+        }
+
+        if (packagesToDisable.size === 0) {
+            showToast("לא נמצאו רכיבים שניתן להשבית אוטומטית. נדרשת הסרה ידנית.");
+            log("לא נמצאו חבילות יעד להשבתה אוטומטית.", 'error');
+            await checkAccounts();
+            return;
+        }
+
+        log(`משבית ${packagesToDisable.size} רכיבים באופן זמני...`, 'info');
+        let disabledCount = 0;
+
         for (const pkg of packagesToDisable) {
             if (PROTECTED_PACKAGES.some(p => pkg.startsWith(p))) continue;
             if (appState.disabledPackages.includes(pkg)) continue;
@@ -116,32 +310,47 @@ export async function runAccountBypass() {
             try {
                 await executeAdbCommand(`pm disable-user --user 0 ${pkg}`, `השבתת ${pkg}`);
                 appState.disabledPackages.push(pkg);
-                count++;
-            } catch (e) { log(`Failed to disable ${pkg}`, 'error'); }
+                saveSessionState();
+                disabledCount++;
+            } catch (e) {
+                log(`שגיאה בהשבתת ${pkg}: ${e.message}`, 'warn');
+            }
         }
 
-        saveSessionState();
+        // Give Android OS time to update service registrations
+        await wait(2000);
         
-        if (count > 0) {
-            await wait(2000);
-            appState.accountsClean = true;
-            showToast(`הושבתו ${count} רכיבים`);
-            navigateTo('page-update', 3);
-        } else {
-            checkAccounts();
-        }
+        appState.accountsClean = true;
+        log(`הושבתו ${disabledCount} רכיבים בהצלחה. ממשיך לשלב ההתקנה...`, 'success');
+        showToast(`הושבתו ${disabledCount} רכיבים`);
+        navigateTo('page-update', 3);
 
-    } catch (e) { showToast("שגיאה ב Bypass: " + e.message); }
+    } catch (e) {
+        showToast("שגיאה ב-Bypass: " + e.message);
+        log(`שגיאה בתהליך Bypass: ${e.message}`, 'error');
+        await restoreAccounts(true);
+        await checkAccounts();
+    }
 }
 
-export async function restoreAccounts() {
-    if (appState.disabledPackages.length === 0) return;
-    log("משחזר חשבונות...", 'info');
-    for (const pkg of appState.disabledPackages) {
-        try { await executeAdbCommand(`pm enable ${pkg}`, `Restore ${pkg}`); }
-        catch (e) {}
+export async function restoreAccounts(silent = false) {
+    if (appState.disabledPackages.length === 0) {
+        restoreSessionState();
     }
-    appState.disabledPackages = [];
-    localStorage.removeItem('mdm_disabled_packages');
-    log("שוחזר בהצלחה", 'success');
+    
+    if (appState.disabledPackages.length === 0) return;
+
+    if (!silent) log("משחזר חשבונות ורכיבים שהושבתו...", 'info');
+    
+    const pkgs = [...appState.disabledPackages];
+    for (const pkg of pkgs) {
+        try {
+            await executeAdbCommand(`pm enable ${pkg}`, `Restore ${pkg}`, silent);
+        } catch (e) {
+            console.warn(`Failed to re-enable ${pkg}:`, e);
+        }
+    }
+
+    clearSessionState();
+    if (!silent) log("כל הרכיבים שוחזרו בהצלחה", 'success');
 }

@@ -231,6 +231,69 @@ export async function startDownload() {
     }
 }
 
+/**
+ * Clean up incomplete installation artifacts and restore state
+ */
+async function rollbackInstallation(isApkInstalled = false) {
+    log("מבצע שחזור וביטול שינויים (Rollback)...", 'warn');
+
+    // 1. Uninstall partially installed APK if owner couldn't be granted
+    if (isApkInstalled) {
+        try {
+            log(`מסיר את חבילת הניהול (${CONFIG.TARGET_PACKAGE}) כדי למנוע השארת אפליקציה שבורה...`, 'info');
+            await executeAdbCommand(`pm uninstall ${CONFIG.TARGET_PACKAGE}`, "Uninstall incomplete MDM", true);
+        } catch (e) {
+            console.warn("Uninstall during rollback skipped/failed", e);
+        }
+    }
+
+    // 2. Remove pushed temp APK file
+    try {
+        await executeAdbCommand("rm -f /data/local/tmp/app.apk", "Cleanup Temp APK", true);
+    } catch (e) {
+        console.warn("Temp cleanup skipped/failed", e);
+    }
+
+    // 3. Restore all disabled packages
+    if (appState.disabledPackages.length > 0) {
+        await restoreAccounts();
+    }
+}
+
+/**
+ * Display structured failure information and recovery actions in the UI
+ */
+function showInstallationFailureUI(errorMessage) {
+    const errorBox = document.getElementById('install-error-box');
+    const errorTitle = document.getElementById('install-error-title');
+    const errorDesc = document.getElementById('install-error-desc');
+    const btnBackAcc = document.getElementById('btn-err-back-accounts');
+
+    if (!errorBox) return;
+
+    errorBox.style.display = 'block';
+
+    const lowerMsg = (errorMessage || '').toLowerCase();
+
+    if (lowerMsg.includes('there are already some accounts') || lowerMsg.includes('חשבונות פעילים')) {
+        if (errorTitle) errorTitle.innerText = "נמצאו חשבונות פעילים במכשיר";
+        if (errorDesc) {
+            errorDesc.innerHTML = `הגדרת מנהל המכשיר (Device Owner) נכשלה מכיוון שקיימים חשבונות פעילים (כגון Google, Samsung, וואטסאפ או רשתות חברתיות).<br><strong>יש להסיר את כל החשבונות בהגדרות המכשיר ולאחר מכן לנסות שוב.</strong>`;
+        }
+        if (btnBackAcc) btnBackAcc.style.display = 'inline-flex';
+    } else if (lowerMsg.includes('already a device owner') || lowerMsg.includes('קיים מנהל מכשיר')) {
+        if (errorTitle) errorTitle.innerText = "קיים מנהל מכשיר אחר";
+        if (errorDesc) {
+            errorDesc.innerHTML = `המכשיר כבר מנוהל על ידי אפליקציה אחרת. אנדרואיד מאפשרת מנהל מכשיר אחד בלבד.<br><strong>נדרש לבצע איפוס יצרן (Factory Reset) למכשיר על מנת להגדירו מחדש.</strong>`;
+        }
+        if (btnBackAcc) btnBackAcc.style.display = 'none';
+    } else {
+        if (errorTitle) errorTitle.innerText = "שגיאה במהלך ההתקנה";
+        if (errorDesc) errorDesc.innerText = errorMessage || "חלה תקלה במהלך תהליך ההתקנה וההגדרה.";
+        if (btnBackAcc) btnBackAcc.style.display = 'none';
+    }
+}
+
 export async function runInstallation() {
     if (!appState.adbConnected) return showToast("ADB אינו מחובר");
     const btn = document.getElementById('btn-install-start');
@@ -240,16 +303,20 @@ export async function runInstallation() {
     const manualBox = document.getElementById('manual-apk-box');
     if (manualBox) manualBox.style.display = 'none';
 
-    // Ensure phone success screen is hidden during installation
+    const errorBox = document.getElementById('install-error-box');
+    if (errorBox) errorBox.style.display = 'none';
+
     const successMsg = document.getElementById('phone-success-message');
     if (successMsg) successMsg.style.display = 'none';
+
+    let isApkInstalled = false;
 
     try {
         // 1. Pre-checks: Check current device owner
         log("בודק מנהל מכשיר קיים...", 'info');
         const owner = await executeAdbCommand("dumpsys device_policy", "Check Owner", true);
         if (owner.includes("ComponentInfo") && !owner.includes(CONFIG.TARGET_PACKAGE)) {
-            throw new Error("קיים מנהל מכשיר (Device Owner) אחר על המכשיר.");
+            throw new Error("קיים מנהל מכשיר (Device Owner) אחר על המכשיר. יש לבצע איפוס יצרן.");
         }
         
         // 2. Load APK (0% - 35%)
@@ -290,6 +357,7 @@ export async function runInstallation() {
         updateProgress(0.65);
         log("מתקין אפליקציה במכשיר...", 'info');
         await executeAdbCommand(`pm install -r -g "/data/local/tmp/app.apk"`, "Install APK");
+        isApkInstalled = true;
         
         await wait(1500);
 
@@ -323,11 +391,18 @@ export async function runInstallation() {
         log(`שגיאה בתהליך: ${e.message}`, 'error');
         showToast("ההתקנה נכשלה");
 
+        // Rollback unmanaged state & restore disabled packages
+        await rollbackInstallation(isApkInstalled);
+
+        // Display guided failure feedback
+        showInstallationFailureUI(e.message);
+
         // If APK retrieval failed, display the manual fallback file selector
         if (!apkBlob && manualBox) {
             manualBox.style.display = 'block';
         }
     } finally {
+        // Ensure any remaining disabled packages are restored
         if (appState.disabledPackages.length > 0) {
             await restoreAccounts();
         }
