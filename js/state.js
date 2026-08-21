@@ -9,7 +9,13 @@ export const appState = {
     sdkVersion: 0, // Track Android SDK Version
     deviceModel: "", // Track connected device model name
     isExecutingCommand: false, // Prevent concurrent heartbeat while running intensive operations
-    lastDisconnectReason: null
+    lastDisconnectReason: null,
+    // MDM & A-Bloq Precheck State
+    isAbloqInstalled: false,
+    isAbloqDeviceOwner: false,
+    isOtherMdmActive: false,
+    activeMdmPackage: null,
+    activeMdmComponent: null
 };
 
 export function saveSessionState() {
@@ -42,6 +48,11 @@ export function restoreSessionState() {
 
 export function clearSessionState() {
     appState.disabledPackages = [];
+    appState.isAbloqInstalled = false;
+    appState.isAbloqDeviceOwner = false;
+    appState.isOtherMdmActive = false;
+    appState.activeMdmPackage = null;
+    appState.activeMdmComponent = null;
     try {
         localStorage.removeItem('mdm_disabled_packages');
     } catch (e) {

@@ -195,7 +195,132 @@ export function parseDisconnectOrRejectionReason(rawError) {
     return rawError;
 }
 
-async function checkDeviceIntegrity() {
+/**
+ * Dynamically parse dumpsys device_policy output to extract Device Owner, Profile Owners, and active admins
+ */
+export function parseDevicePolicyDump(dumpsysOutput, targetPackage = CONFIG.TARGET_PACKAGE) {
+    const result = {
+        hasDeviceOwner: false,
+        deviceOwnerComponent: null,
+        deviceOwnerPackage: null,
+        isAbloqDeviceOwner: false,
+        isOtherMdmActive: false,
+        activeMdmPackage: null,
+        activeMdmComponent: null,
+        activeAdmins: []
+    };
+
+    if (!dumpsysOutput || typeof dumpsysOutput !== 'string') {
+        return result;
+    }
+
+    // 1. Dynamic Device Owner Detection across multiple Android dumpsys formats
+    const doSectionMatch = dumpsysOutput.match(/Device Owner(?:\s*\([^)]*\))?:[\s\S]*?(?:(?:\r?\n\s*\r?\n)|(?:Profile Owner)|(?:Active Admins)|$)/i);
+    const doText = doSectionMatch ? doSectionMatch[0] : dumpsysOutput;
+
+    let compMatch = doText.match(/admin=ComponentInfo\{([^}]+)\}/i) 
+        || doText.match(/ComponentInfo\{([^}]+)\}/i)
+        || dumpsysOutput.match(/Device Owner[\s\S]*?admin=ComponentInfo\{([^}]+)\}/i)
+        || dumpsysOutput.match(/Device Owner[\s\S]*?ComponentInfo\{([^}]+)\}/i);
+
+    let pkgMatch = doText.match(/package=([^\s\r\n]+)/i);
+
+    if (compMatch && compMatch[1]) {
+        const fullComp = compMatch[1].trim();
+        const pkg = fullComp.includes('/') ? fullComp.split('/')[0].trim() : fullComp;
+        result.hasDeviceOwner = true;
+        result.deviceOwnerComponent = fullComp;
+        result.deviceOwnerPackage = pkg;
+    } else if (pkgMatch && pkgMatch[1]) {
+        const pkg = pkgMatch[1].trim();
+        result.hasDeviceOwner = true;
+        result.deviceOwnerPackage = pkg;
+        result.deviceOwnerComponent = pkg;
+    }
+
+    // 2. Classify Device Owner
+    if (result.hasDeviceOwner) {
+        if (result.deviceOwnerPackage === targetPackage) {
+            result.isAbloqDeviceOwner = true;
+        } else {
+            result.isOtherMdmActive = true;
+            result.activeMdmPackage = result.deviceOwnerPackage;
+            result.activeMdmComponent = result.deviceOwnerComponent;
+        }
+    }
+
+    // 3. Dynamic Active Admins extraction
+    const adminMatches = dumpsysOutput.matchAll(/ComponentInfo\{([^}]+)\}/gi);
+    for (const m of adminMatches) {
+        if (m[1]) {
+            const comp = m[1].trim();
+            const pkg = comp.includes('/') ? comp.split('/')[0].trim() : comp;
+            if (!result.activeAdmins.some(a => a.component === comp)) {
+                result.activeAdmins.push({ component: comp, package: pkg });
+            }
+        }
+    }
+
+    return result;
+}
+
+/**
+ * Perform a dynamic check of MDM and A-Bloq package status on the connected device
+ */
+export async function checkDeviceMdmAndPackageStatus(targetPackage = CONFIG.TARGET_PACKAGE) {
+    const status = {
+        isAbloqInstalled: false,
+        isAbloqDeviceOwner: false,
+        isOtherMdmActive: false,
+        activeMdmPackage: null,
+        activeMdmComponent: null,
+        hasDeviceOwner: false,
+        deviceOwnerPackage: null,
+        deviceOwnerComponent: null,
+        activeAdmins: []
+    };
+
+    try {
+        // 1. Check dumpsys device_policy
+        const policyDump = await executeAdbCommand("dumpsys device_policy", "בדיקת מנהל מכשיר", true);
+        const policy = parseDevicePolicyDump(policyDump, targetPackage);
+
+        status.hasDeviceOwner = policy.hasDeviceOwner;
+        status.deviceOwnerPackage = policy.deviceOwnerPackage;
+        status.deviceOwnerComponent = policy.deviceOwnerComponent;
+        status.isAbloqDeviceOwner = policy.isAbloqDeviceOwner;
+        status.isOtherMdmActive = policy.isOtherMdmActive;
+        status.activeMdmPackage = policy.activeMdmPackage;
+        status.activeMdmComponent = policy.activeMdmComponent;
+        status.activeAdmins = policy.activeAdmins;
+
+        // 2. Check if A-Bloq package is installed
+        try {
+            const pkgList = await executeAdbCommand("pm list packages", "בדיקת התקנת A-Bloq", true);
+            const isInstalled = pkgList.split(/\r?\n/).some(line => {
+                const trimmed = line.trim();
+                return trimmed === `package:${targetPackage}` || trimmed === targetPackage;
+            });
+            status.isAbloqInstalled = isInstalled;
+        } catch (pkgErr) {
+            console.warn("Package list check error:", pkgErr);
+        }
+
+        // Sync with appState
+        appState.isAbloqInstalled = status.isAbloqInstalled;
+        appState.isAbloqDeviceOwner = status.isAbloqDeviceOwner;
+        appState.isOtherMdmActive = status.isOtherMdmActive;
+        appState.activeMdmPackage = status.activeMdmPackage;
+        appState.activeMdmComponent = status.activeMdmComponent;
+
+    } catch (e) {
+        console.warn("Device MDM & Package check failed:", e);
+    }
+
+    return status;
+}
+
+export async function checkDeviceIntegrity() {
     log("מבצע בדיקות תקינות מקדימות...", 'info');
     try {
         const sdkOut = await executeAdbCommand("getprop ro.build.version.sdk", "בדיקת גרסת אנדרואיד", true);
@@ -230,6 +355,18 @@ async function checkDeviceIntegrity() {
         if (rootOut.includes("ROOT_FOUND")) {
             log("אזהרה קריטית: זוהה מכשיר עם ROOT (הרשאות שורש).", 'warn');
             showToast("אזהרה: המכשיר מזוהה כבעל Root");
+        }
+
+        // Dynamic MDM & A-Bloq Installation Precheck
+        const mdmStatus = await checkDeviceMdmAndPackageStatus();
+        if (mdmStatus.isOtherMdmActive) {
+            const mdmName = mdmStatus.activeMdmPackage || "לא מזוהה";
+            log(`אזהרה: זוהה מנהל מכשיר (MDM) אחר פעיל במכשיר: ${mdmName}. נדרש איפוס יצרן.`, 'warn');
+            showToast(`אזהרה: קיים מנהל מכשיר (${mdmName})`);
+        } else if (mdmStatus.isAbloqDeviceOwner) {
+            log("A-Bloq כבר מותקן ומוגדר כמנהל המכשיר במכשיר זה.", 'success');
+        } else if (mdmStatus.isAbloqInstalled) {
+            log("A-Bloq מותקן במכשיר (טרם הוגדר כמנהל מכשיר).", 'info');
         }
     } catch (e) {
         console.warn("Device integrity check warning:", e);

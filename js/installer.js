@@ -1,7 +1,7 @@
 // js/installer.js
 import { appState } from './state.js';
 import { CONFIG } from './config.js';
-import { executeAdbCommand, wait } from './adb-client.js';
+import { executeAdbCommand, wait, checkDeviceMdmAndPackageStatus } from './adb-client.js';
 import { log, showToast, updateProgress, navigateTo, resetMilestones, updateMilestone, setInstallHeroState, clearConsoleLog, setPhonePanelState } from './ui.js';
 import { restoreAccounts } from './accounts.js';
 
@@ -316,10 +316,11 @@ function showInstallationFailureUI(errorMessage) {
             errorDesc.innerHTML = `הגדרת הניהול נכשלה כי קיימים במכשיר חשבונות פעילים (כגון גוגל, סמסונג, וואטסאפ או רשתות חברתיות).<br><strong>יש להסיר את כל החשבונות בהגדרות המכשיר ולאחר מכן לנסות שוב.</strong>`;
         }
         if (btnBackAcc) btnBackAcc.style.display = 'inline-flex';
-    } else if (lowerMsg.includes('already a device owner') || lowerMsg.includes('קיים מנהל מכשיר') || lowerMsg.includes('trying to set the device owner')) {
-        if (errorTitle) errorTitle.innerText = "קיים כבר מנהל מכשיר";
+    } else if (lowerMsg.includes('already a device owner') || lowerMsg.includes('קיים מנהל מכשיר') || lowerMsg.includes('trying to set the device owner') || lowerMsg.includes('איפוס יצרן')) {
+        if (errorTitle) errorTitle.innerText = "קיים כבר מנהל מכשיר במערכת";
         if (errorDesc) {
-            errorDesc.innerHTML = `המכשיר כבר מנוהל על ידי אפליקציה אחרת.<br><strong>נדרש לבצע איפוס יצרן (Factory Reset) למכשיר על מנת להגדירו מחדש.</strong>`;
+            const mdmName = appState.activeMdmPackage ? ` (<b>${appState.activeMdmPackage}</b>)` : '';
+            errorDesc.innerHTML = `המכשיר כבר מנוהל על ידי אפליקציית ניהול אחרת${mdmName}.<br>Android חוסמת הגדרת מנהל נוסף. <strong>נדרש לבצע איפוס יצרן (Factory Reset) למכשיר על מנת להגדירו מחדש.</strong>`;
         }
         if (btnBackAcc) btnBackAcc.style.display = 'none';
     } else if (lowerMsg.includes('insufficient_storage') || lowerMsg.includes('מקום פנוי')) {
@@ -508,13 +509,58 @@ export async function runInstallation() {
     let currentPhase = 1;
 
     try {
-        // 1. Pre-checks: Check current device owner
+        // 1. Pre-checks: Dynamic check of device owner, foreign MDMs, and A-Bloq status
         currentPhase = 1;
-        log("בודק מנהל מכשיר קיים...", 'info');
-        const owner = await executeAdbCommand("dumpsys device_policy", "בדיקת מנהל מכשיר קיים", true);
-        if (owner.includes("ComponentInfo") && !owner.includes(CONFIG.TARGET_PACKAGE)) {
-            throw new Error("קיים מנהל מכשיר אחר על המכשיר. יש לבצע איפוס יצרן.");
+        log("בודק מנהל מכשיר ותקינות מקדימה...", 'info');
+        const mdmStatus = await checkDeviceMdmAndPackageStatus(CONFIG.TARGET_PACKAGE);
+
+        if (mdmStatus.isOtherMdmActive) {
+            const foreignPkg = mdmStatus.activeMdmPackage || "לא מזוהה";
+            throw new Error(`קיים מנהל מכשיר (MDM) אחר על המכשיר (${foreignPkg}). מערכת Android אינה מאפשרת הגדרת מנהל נוסף ללא איפוס יצרן (Factory Reset).`);
         }
+
+        if (mdmStatus.isAbloqDeviceOwner) {
+            log("A-Bloq כבר מותקן ומוגדר כמנהל המכשיר (Device Owner) בהצלחה!", 'success');
+            // Mark pre-check done
+            updateMilestone(1, 'done');
+            updateProgress(0.50);
+
+            // Skip redundant download/push/dpm set-device-owner to prevent duplicate owner crash
+            log("מאמת ומעניק הרשאות מערכת...", 'info');
+            updateMilestone(5, 'active');
+            setInstallHeroState('running', "מאמת הרשאות מערכת...", "מוודא הרשאות ניהול מאובטחות", 70);
+            updateProgress(0.70);
+            await grantAllAppPermissions(CONFIG.TARGET_PACKAGE);
+            updateMilestone(5, 'done');
+
+            // Launch app
+            updateMilestone(6, 'active');
+            setInstallHeroState('running', "מפעיל את האפליקציה...", "פותח את A-Bloq במכשיר", 90);
+            updateProgress(0.90);
+            log("מפעיל את האפליקציה...", 'info');
+            await executeAdbCommand(`am start -n ${CONFIG.TARGET_PACKAGE}/.MainActivity`, "הפעלת אפליקציה");
+            updateMilestone(6, 'done');
+
+            // Complete intermediate milestones
+            [2, 3, 4].forEach(i => updateMilestone(i, 'done'));
+
+            updateProgress(1.0);
+            setInstallHeroState('success', "A-Bloq כבר מותקן ומוגדר כמנהל המכשיר!", "A-Bloq פעיל ומוכן לשימוש.", 100);
+            log("ההתקנה וההגדרה הושלמו בהצלחה!", 'success');
+            showToast("A-Bloq כבר מוגדר ופעיל!");
+
+            if (btnNewDevice) {
+                btnNewDevice.style.display = 'inline-flex';
+                btnNewDevice.disabled = false;
+            }
+            setPhonePanelState('success');
+            return;
+        }
+
+        if (mdmStatus.isAbloqInstalled) {
+            log("A-Bloq מותקן במכשיר. ממשיך בהגדרת ניהול המכשיר (Device Owner)...", 'info');
+        }
+
         updateMilestone(1, 'done');
 
         // 2. Load APK (10% - 35%)

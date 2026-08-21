@@ -550,14 +550,47 @@ export async function checkAccounts() {
         const accounts = parseActiveAccounts(rawDump);
         const isSdk14 = (appState.sdkVersion || 0) >= 34;
 
+        if (appState.isOtherMdmActive) {
+            updateStatusBadge('account-status', '<span class="material-symbols-rounded">gpp_bad</span> קיים מנהל מכשיר', 'error');
+            if (nextBtn) nextBtn.disabled = true;
+            appState.accountsClean = false;
+
+            if (heroStatus) heroStatus.className = 'account-hero-card error';
+            if (heroTitle) heroTitle.textContent = `זוהה מנהל מכשיר (MDM) פעיל: ${appState.activeMdmPackage || 'מנהל אחר'}`;
+            if (heroDesc) {
+                heroDesc.innerHTML = `המכשיר כבר מנוהל על ידי אפליקציה או ארגון אחר (<strong>${appState.activeMdmPackage || 'MDM'}</strong>).<br>מערכת Android חוסמת הגדרת מנהל נוסף. נדרש <strong>איפוס יצרן (Factory Reset)</strong>.`;
+            }
+            if (heroIcon) heroIcon.textContent = 'gpp_bad';
+            if (actionOptions) actionOptions.style.display = 'none';
+
+            if (listDiv) {
+                listDiv.innerHTML = `
+                    <div class="account-error-state" style="padding: 24px; text-align: center; background: var(--md-sys-color-surface-variant); border-radius: var(--border-radius-lg, 16px); margin-top: 10px;">
+                        <div style="color: var(--md-sys-color-error, #F28B82); font-size: 1.1rem; font-weight: 700; margin-bottom: 8px;">
+                            <span class="material-symbols-rounded" style="vertical-align: middle;">lock_clock</span> נדרש איפוס יצרן למכשיר
+                        </div>
+                        <div style="font-size: 0.9rem; color: var(--md-sys-color-on-surface-variant);">
+                            קיים מנהל מכשיר (Device Owner) פעיל של <strong>${appState.activeMdmPackage || 'אפליקציה אחרת'}</strong>. לא ניתן להתקין מנהל מכשיר נוסף במקביל.
+                        </div>
+                    </div>
+                `;
+            }
+            return;
+        }
+
         if (accounts.length === 0) {
             updateStatusBadge('account-status', '<span class="material-symbols-rounded">check_circle</span> מכשיר נקי', 'success');
             if (nextBtn) nextBtn.disabled = false;
             appState.accountsClean = true;
 
             if (heroStatus) heroStatus.className = 'account-hero-card clean';
-            if (heroTitle) heroTitle.textContent = 'המכשיר נקי מחשבונות';
-            if (heroDesc) heroDesc.textContent = 'לא זוהו חשבונות חוסמים. ניתן להמשיך ישירות לשלב ההתקנה.';
+            if (appState.isAbloqDeviceOwner) {
+                if (heroTitle) heroTitle.textContent = 'A-Bloq כבר מוגדר כמנהל המכשיר';
+                if (heroDesc) heroDesc.textContent = 'A-Bloq מותקן ופעיל כ-Device Owner. מעבר לשלב הבא יאמת הרשאות ויפעיל את האפליקציה.';
+            } else {
+                if (heroTitle) heroTitle.textContent = 'המכשיר נקי מחשבונות';
+                if (heroDesc) heroDesc.textContent = 'לא זוהו חשבונות חוסמים. ניתן להמשיך ישירות לשלב ההתקנה.';
+            }
             if (heroIcon) heroIcon.textContent = 'verified_user';
             if (actionOptions) actionOptions.style.display = 'none';
 
@@ -567,8 +600,8 @@ export async function checkAccounts() {
                         <div class="clean-badge-icon">
                             <span class="material-symbols-rounded">check_circle</span>
                         </div>
-                        <div class="clean-title">המכשיר נקי מחשבונות ומוכן להמשך</div>
-                        <div class="clean-subtitle">נקי מחשבונות - אין חשבונות פעילים שחוסמים את המשך ההתקנה.</div>
+                        <div class="clean-title">${appState.isAbloqDeviceOwner ? 'A-Bloq מוגדר כ-Device Owner' : 'המכשיר נקי מחשבונות ומוכן להמשך'}</div>
+                        <div class="clean-subtitle">${appState.isAbloqDeviceOwner ? 'A-Bloq כבר מוגדר כמנהל המכשיר. ניתן להמשיך לשלב הבא.' : 'נקי מחשבונות - אין חשבונות פעילים שחוסמים את המשך ההתקנה.'}</div>
                     </div>
                 `;
             }
