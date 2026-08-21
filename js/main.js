@@ -55,6 +55,13 @@ window.openBypassModal = async () => {
         previewBox.innerHTML = '<div class="preview-loading"><span class="spin-icon material-symbols-rounded">sync</span> סורק רכיבים להשבתה...</div>';
     }
 
+    if (!appState.adbConnected || !appState.adbInstance) {
+        if (previewBox) {
+            previewBox.innerHTML = '<div style="color: #FFB4AB;">יש לחבר את המכשיר תחילה.</div>';
+        }
+        return;
+    }
+
     try {
         const preview = await getBypassPreview();
         if (previewBox) {
@@ -69,6 +76,7 @@ window.openBypassModal = async () => {
             }
         }
     } catch (e) {
+        console.warn("Bypass preview error:", e);
         if (previewBox) {
             previewBox.innerHTML = '<div style="color: #FFB4AB;">שירותי Google / Samsung / Microsoft וחשבונות המערכת המזוהים.</div>';
         }
@@ -94,7 +102,10 @@ window.openConsoleModal = openConsoleModal;
 window.closeConsoleModal = closeConsoleModal;
 window.clearConsoleLog = clearConsoleLog;
 
-window.handleBypassTriggerClick = () => {
+window.handleBypassTriggerClick = (event) => {
+    if (event && typeof event.stopPropagation === 'function') {
+        event.stopPropagation();
+    }
     // Android 14+ (SDK >= 34) constraint
     if ((appState.sdkVersion || 0) >= 34) {
         window.openAndroid14Modal();

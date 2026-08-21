@@ -236,76 +236,108 @@ async function checkDeviceIntegrity() {
     }
 }
 
+let commandQueue = Promise.resolve();
+
 /**
- * Execute ADB command with timeout, rejection detection, and disconnect tracking
+ * Execute ADB command with timeout, rejection detection, and disconnect tracking.
+ * All commands are sequenced to prevent WebUSB endpoint collision and packet corruption.
  */
 export async function executeAdbCommand(command, description, silent = false, timeoutMs = CONFIG.ADB_DEFAULT_TIMEOUT_MS || 15000) {
     if (!appState.adbInstance) {
         throw new Error("ADB לא מחובר. יש לחבר את המכשיר מחדש.");
     }
-    
-    if (!silent) {
-        log(`$ adb shell ${command}`, 'cmd');
-    }
-    
-    appState.isExecutingCommand = true;
 
-    try {
-        const shellPromise = (async () => {
-            const shell = await appState.adbInstance.shell(command);
-            return await readAll(shell);
-        })();
-
-        const response = await withTimeout(
-            shellPromise,
-            timeoutMs,
-            `פסק זמן בביצוע הפקודה: ${description || command} (המכשיר לא השיב תוך ${timeoutMs / 1000} שניות)`
-        );
-
-        const trimmed = response.trim();
-        const lowerRes = response.toLowerCase();
-
-        if (!silent && trimmed) {
-            log(trimmed, 'stdout');
+    const execute = async () => {
+        if (!appState.adbInstance) {
+            throw new Error("ADB לא מחובר. יש לחבר את המכשיר מחדש.");
         }
 
-        // 1. Check for specific known ADB error signatures
-        for (const [key, hebrewMsg] of Object.entries(ADB_ERRORS)) {
-            if (response.includes(key)) {
-                // If the error signature indicates disconnect
-                if (key === "not found" || key === "device not found" || key === "closed" || key === "device offline") {
-                    handleDeviceDisconnect(hebrewMsg);
+        if (!silent) {
+            log(`$ adb shell ${command}`, 'cmd');
+        }
+
+        appState.isExecutingCommand = true;
+
+        try {
+            const shellPromise = (async () => {
+                let shell;
+                let openAttempts = 0;
+                const maxOpenAttempts = 3;
+
+                while (openAttempts < maxOpenAttempts) {
+                    openAttempts++;
+                    try {
+                        shell = await appState.adbInstance.shell(command);
+                        break;
+                    } catch (openErr) {
+                        const isTransientOpenFailure = (openErr.message || '').includes('Open failed');
+                        if (isTransientOpenFailure && openAttempts < maxOpenAttempts) {
+                            await wait(350);
+                            continue;
+                        }
+                        throw openErr;
+                    }
                 }
-                throw new Error(`${hebrewMsg} (${key})`);
+
+                return await readAll(shell);
+            })();
+
+            const response = await withTimeout(
+                shellPromise,
+                timeoutMs,
+                `פסק זמן בביצוע הפקודה: ${description || command} (המכשיר לא השיב תוך ${timeoutMs / 1000} שניות)`
+            );
+
+            const trimmed = response.trim();
+            const lowerRes = response.toLowerCase();
+
+            if (!silent && trimmed) {
+                log(trimmed, 'stdout');
             }
+
+            // 1. Check for specific known ADB error signatures
+            for (const [key, hebrewMsg] of Object.entries(ADB_ERRORS)) {
+                if (response.includes(key)) {
+                    // If the error signature indicates disconnect
+                    if (key === "not found" || key === "device not found" || key === "closed" || key === "device offline") {
+                        handleDeviceDisconnect(hebrewMsg);
+                    }
+                    throw new Error(`${hebrewMsg} (${key})`);
+                }
+            }
+
+            // 2. Check for general failure indicators
+            if (lowerRes.startsWith("error:") || lowerRes.includes("failure [") || lowerRes.includes("exception occurred while executing")) {
+                throw new Error("נכשלה הפעולה: " + trimmed);
+            }
+
+            if (!silent) log(`הושלם בהצלחה: ${description}`, 'success');
+            return response;
+
+        } catch (e) {
+            const rawMsg = e.message || String(e);
+            const lowerMsg = rawMsg.toLowerCase();
+
+            // Check if error is due to physical/pipe disconnection
+            if (lowerMsg.includes('claim') || lowerMsg.includes('networkerror') || lowerMsg.includes('transfer') || lowerMsg.includes('lost') || lowerMsg.includes('not found') || lowerMsg.includes('closed')) {
+                handleDeviceDisconnect("התקשורת עם המכשיר נותקה");
+            }
+
+            if (!silent) log(`שגיאה: ${rawMsg}`, 'error');
+            throw e;
+        } finally {
+            appState.isExecutingCommand = false;
         }
+    };
 
-        // 2. Check for general failure indicators
-        if (lowerRes.startsWith("error:") || lowerRes.includes("failure [") || lowerRes.includes("exception occurred while executing")) {
-            throw new Error("נכשלה הפעולה: " + trimmed);
-        }
-
-        if (!silent) log(`הושלם בהצלחה: ${description}`, 'success');
-        return response;
-
-    } catch (e) {
-        const rawMsg = e.message || String(e);
-        const lowerMsg = rawMsg.toLowerCase();
-
-        // Check if error is due to physical/pipe disconnection
-        if (lowerMsg.includes('claim') || lowerMsg.includes('networkerror') || lowerMsg.includes('transfer') || lowerMsg.includes('lost') || lowerMsg.includes('not found') || lowerMsg.includes('closed')) {
-            handleDeviceDisconnect("התקשורת עם המכשיר נותקה");
-        }
-
-        if (!silent) log(`שגיאה: ${rawMsg}`, 'error');
-        throw e;
-    } finally {
-        appState.isExecutingCommand = false;
-    }
+    const task = commandQueue.then(execute, execute);
+    commandQueue = task.catch(() => {});
+    return task;
 }
 
-// Stream Reader with chunk timeout support
+// Stream Reader with chunk timeout support and clean teardown
 export async function readAll(stream, chunkTimeoutMs = 12000) {
+    if (!stream) return "";
     const decoder = new TextDecoder();
     let res = "";
     try {
@@ -317,11 +349,17 @@ export async function readAll(stream, chunkTimeoutMs = 12000) {
                 res += decoder.decode(msg.data);
                 await stream.send("OKAY");
             } else if (msg.cmd === "CLSE") {
+                if (stream.close) {
+                    await stream.close().catch(() => {});
+                }
                 break;
             }
         }
     } catch (e) {
         console.warn("Stream reading interrupted or completed:", e);
+        if (stream.close) {
+            await stream.close().catch(() => {});
+        }
     }
     return res.trim();
 }

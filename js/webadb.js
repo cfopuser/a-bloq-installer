@@ -59,7 +59,9 @@
 	};
 
 	Adb.WebUSB.Transport.prototype.reset = function() {
-		this.device.reset();
+		// Do not call device.reset() as WebUSB USBDevice.reset() causes a hardware port reset
+		// that drops the connection on Windows and throws unhandled NetworkError.
+		return Promise.resolve();
 	};
 
 	Adb.WebUSB.Transport.prototype.send = function(ep, data) {

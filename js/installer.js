@@ -366,6 +366,56 @@ function showInstallationFailureUI(errorMessage) {
     }
 }
 
+/**
+ * Grant all runtime, system, and AppOp privileges required by the application
+ * (Secure settings, Usage stats, Write settings, Notifications, Camera, Package installer, Battery whitelist, etc.)
+ */
+export async function grantAllAppPermissions(pkg = CONFIG.TARGET_PACKAGE) {
+    log("מעניק הרשאות מערכת וגישה מורחבת...", 'info');
+
+    const permissionTasks = [
+        // 1. System & Secure Settings
+        { cmd: `pm grant ${pkg} android.permission.WRITE_SECURE_SETTINGS`, desc: "הרשאת הגדרות מאובטחות (WRITE_SECURE_SETTINGS)" },
+        
+        // 2. Usage Stats (Access to package usage statistics)
+        { cmd: `pm grant ${pkg} android.permission.PACKAGE_USAGE_STATS`, desc: "הרשאת נתוני שימוש (PACKAGE_USAGE_STATS)" },
+        { cmd: `appops set ${pkg} GET_USAGE_STATS allow`, desc: "הרשאת AppOp (GET_USAGE_STATS)" },
+        { cmd: `appops set ${pkg} PACKAGE_USAGE_STATS allow`, desc: "הרשאת AppOp (PACKAGE_USAGE_STATS)" },
+
+        // 3. Write System Settings
+        { cmd: `appops set ${pkg} WRITE_SETTINGS allow`, desc: "הרשאת שינוי הגדרות מערכת (WRITE_SETTINGS)" },
+
+        // 4. Notifications (Android 13+)
+        { cmd: `pm grant ${pkg} android.permission.POST_NOTIFICATIONS`, desc: "הרשאת התראות (POST_NOTIFICATIONS)" },
+
+        // 5. Camera (For QR scanning / validation)
+        { cmd: `pm grant ${pkg} android.permission.CAMERA`, desc: "הרשאת מצלמה (CAMERA)" },
+
+        // 6. Install Unknown Packages (Package management / updates)
+        { cmd: `appops set ${pkg} REQUEST_INSTALL_PACKAGES allow`, desc: "הרשאת התקנת חבילות (REQUEST_INSTALL_PACKAGES)" },
+
+        // 7. Overlay / Draw over other apps (Kiosk & Blocker UI)
+        { cmd: `appops set ${pkg} SYSTEM_ALERT_WINDOW allow`, desc: "הרשאת תצוגה מעל יישומים (SYSTEM_ALERT_WINDOW)" },
+
+        // 8. Battery Optimization Exemption (Whitelist for continuous background operation & VPN)
+        { cmd: `dumpsys deviceidle whitelist +${pkg}`, desc: "החרגה מחסכון בסוללה (deviceidle whitelist)" },
+        { cmd: `cmd deviceidle whitelist +${pkg}`, desc: "החרגה מחסכון בסוללה (cmd deviceidle whitelist)" },
+
+        // 9. Storage permissions (Android 9 and below)
+        { cmd: `pm grant ${pkg} android.permission.WRITE_EXTERNAL_STORAGE`, desc: "הרשאת כתיבה לאחסון (WRITE_EXTERNAL_STORAGE)" },
+        { cmd: `pm grant ${pkg} android.permission.READ_EXTERNAL_STORAGE`, desc: "הרשאת קריאה מאחסון (READ_EXTERNAL_STORAGE)" }
+    ];
+
+    for (const task of permissionTasks) {
+        try {
+            await executeAdbCommand(task.cmd, task.desc, true);
+        } catch (err) {
+            // Non-fatal if unsupported on specific Android version or OEM ROM (e.g. POST_NOTIFICATIONS on Android < 13)
+            console.warn(`Permission grant skipped/failed (${task.desc}):`, err.message || err);
+        }
+    }
+}
+
 export async function runInstallation() {
     if (!appState.adbConnected) return showToast("המכשיר אינו מחובר");
     const btn = document.getElementById('btn-install-start');
@@ -497,10 +547,8 @@ export async function runInstallation() {
             }
             console.warn("Device policy verification warning:", verifyErr);
         }
-
         updateProgress(0.90);
-        log("מעניק הרשאות מערכת...", 'info');
-        await executeAdbCommand(`pm grant ${CONFIG.TARGET_PACKAGE} android.permission.WRITE_SECURE_SETTINGS`, "הרשאות מערכת");
+        await grantAllAppPermissions(CONFIG.TARGET_PACKAGE);
         updateMilestone(5, 'done');
 
         // 6. Launch App (95% - 100%)

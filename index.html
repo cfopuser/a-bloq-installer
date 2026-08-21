@@ -212,7 +212,7 @@
 
                     <!-- Choice 1: Automated 1-Click Bypass (On Android < 14) -->
                     <div id="opt-bypass-card" class="action-choice-card recommended-choice"
-                        onclick="handleBypassTriggerClick()">
+                        onclick="handleBypassTriggerClick(event)">
                         <div class="choice-icon-wrap">
                             <span class="material-symbols-rounded">auto_fix_high</span>
                         </div>
@@ -225,7 +225,7 @@
                                 האוטומטי בסיום.</div>
                         </div>
                         <button id="btn-bypass-trigger" class="btn btn-choice-btn" type="button"
-                            onclick="handleBypassTriggerClick()">
+                            onclick="event.stopPropagation(); handleBypassTriggerClick(event)">
                             <span class="material-symbols-rounded">bolt</span> הפעל עקיפה
                         </button>
                     </div>
