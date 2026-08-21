@@ -8,10 +8,24 @@ export const CONFIG = {
     TARGET_PACKAGE: "com.secureguard.mdm",
     DEVICE_ADMIN: ".SecureGuardDeviceAdminReceiver",
     APK_LOCAL_PATH: "apk/normal.apk",
+    APK_FETCH_TIMEOUT_MS: 8000,
     APK_FALLBACK_URLS: [
+        // 1. GitHack CDN (Serves directly from Cloudflare edge with complete CORS support)
+        "https://rawcdn.githack.com/cfopuser/a-bloq-installer/main/apk/normal.apk",
+        "https://raw.githack.com/cfopuser/a-bloq-installer/main/apk/normal.apk",
+        // 2. jsDelivr Multi-Edge CDNs
         "https://cdn.jsdelivr.net/gh/cfopuser/a-bloq-installer@main/apk/normal.apk",
+        "https://fastly.jsdelivr.net/gh/cfopuser/a-bloq-installer@main/apk/normal.apk",
+        "https://gcore.jsdelivr.net/gh/cfopuser/a-bloq-installer@main/apk/normal.apk",
+        "https://testingcf.jsdelivr.net/gh/cfopuser/a-bloq-installer@main/apk/normal.apk",
+        // 3. Staticaly CDN (Fast Open-Source Global CDN)
+        "https://cdn.staticaly.com/gh/cfopuser/a-bloq-installer/main/apk/normal.apk",
+        // 4. GitHub Raw Mirror
         "https://raw.githubusercontent.com/cfopuser/a-bloq-installer/main/apk/normal.apk",
-        "https://github.com/sesese1234/SecureGuardMDM/releases/latest/download/Abloq-release.apk"
+        // 5. GitHub Releases Artifact Direct Mirrors
+        "https://github.com/cfopuser/a-bloq-installer/releases/download/latest-apk/normal.apk",
+        "https://github.com/sesese1234/SecureGuardMDM/releases/latest/download/Abloq-release.apk",
+        "https://github.com/another-weird-dude/SecureGuardMDM/releases/latest/download/Abloq-release.apk"
     ]
 };
 

@@ -9,7 +9,7 @@ jobs:
   update-apk:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Needed to push the update back to your repo
+      contents: write # Needed to push the update and create releases
 
     steps:
       - name: Checkout your repo
@@ -26,6 +26,7 @@ jobs:
           gh release download --repo another-weird-dude/SecureGuardMDM --pattern "*.apk" --clobber --output apk/normal.apk
 
       - name: Commit and Push if changed
+        id: commit_step
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -33,10 +34,38 @@ jobs:
           # Add the file inside the apk folder
           git add apk/normal.apk
           
-          # Only commit if the file actually changed
+          # Check if changes exist
           if git diff --staged --quiet; then
+            echo "changed=false" >> $GITHUB_OUTPUT
             echo "No changes detected in the APK."
           else
             git commit -m "Update APK in apk folder to latest version from source"
             git push
+            echo "changed=true" >> $GITHUB_OUTPUT
           fi
+
+      - name: Create or Update GitHub Release and Tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Ensure a release with tag 'latest-apk' exists for direct downloads
+          if gh release view latest-apk >/dev/null 2>&1; then
+            echo "Updating existing latest-apk release asset..."
+            gh release upload latest-apk apk/normal.apk --clobber
+          else
+            echo "Creating latest-apk release..."
+            gh release create latest-apk apk/normal.apk --title "Latest Abloq APK" --notes "Automated build of the latest Abloq APK for multi-CDN fallback distribution."
+          fi
+
+      - name: Purge & Warm CDN Caches (jsDelivr, GitHack, Staticaly)
+        run: |
+          echo "Purging and warming up global CDN endpoints for instant availability..."
+          # 1. Purge jsDelivr cache
+          curl -s -X POST "https://purge.jsdelivr.net/gh/cfopuser/a-bloq-installer@main/apk/normal.apk" || true
+          
+          # 2. Warm up CDN endpoints
+          curl -s -I "https://rawcdn.githack.com/cfopuser/a-bloq-installer/main/apk/normal.apk" || true
+          curl -s -I "https://raw.githack.com/cfopuser/a-bloq-installer/main/apk/normal.apk" || true
+          curl -s -I "https://cdn.jsdelivr.net/gh/cfopuser/a-bloq-installer@main/apk/normal.apk" || true
+          curl -s -I "https://cdn.staticaly.com/gh/cfopuser/a-bloq-installer/main/apk/normal.apk" || true
+          echo "CDN caches purged and warmed successfully."

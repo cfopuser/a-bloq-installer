@@ -20,7 +20,26 @@ function formatBytes(bytes) {
 }
 
 /**
- * Download a stream with progress reporting
+ * Fetch with configurable timeout (prevents hanging on ISP filter inspection)
+ */
+async function fetchWithTimeout(url, options = {}, timeoutMs = CONFIG.APK_FETCH_TIMEOUT_MS || 8000) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+        const resp = await fetch(url, { ...options, signal: controller.signal });
+        return resp;
+    } catch (err) {
+        if (err.name === 'AbortError') {
+            throw new Error(`פסק זמן בשרת (Timeout לאחר ${timeoutMs / 1000} שניות)`);
+        }
+        throw err;
+    } finally {
+        clearTimeout(timeoutId);
+    }
+}
+
+/**
+ * Download a stream with progress reporting and stream fault protection
  */
 async function downloadStreamWithProgress(resp, onProgress) {
     if (!resp.body || !resp.body.getReader) {
@@ -35,14 +54,18 @@ async function downloadStreamWithProgress(resp, onProgress) {
     let receivedBytes = 0;
     const chunks = [];
 
-    while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        chunks.push(value);
-        receivedBytes += value.length;
-        if (onProgress) {
-            onProgress(receivedBytes, totalBytes);
+    try {
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            chunks.push(value);
+            receivedBytes += value.length;
+            if (onProgress) {
+                onProgress(receivedBytes, totalBytes);
+            }
         }
+    } catch (streamErr) {
+        throw new Error(`שגיאת הזרמת נתונים (Stream Error): ${streamErr.message}`);
     }
 
     return new Blob(chunks, { type: 'application/vnd.android.package-archive' });
@@ -60,7 +83,7 @@ function getLocalApkUrl() {
 }
 
 /**
- * Multi-tier resilient APK fetching
+ * Multi-tier resilient APK fetching with vast CDN fallback layer
  */
 export async function fetchApkBlobWithFallbacks(onProgress) {
     if (apkBlob) return apkBlob;
@@ -71,13 +94,19 @@ export async function fetchApkBlobWithFallbacks(onProgress) {
     const localUrl = getLocalApkUrl();
     sources.push({ name: "קובץ מקומי (Local Repo)", url: `${localUrl}?t=${Date.now()}` });
 
-    // 2. Secondary: Configured Fallback URLs (CDN / GitHub raw / release direct)
+    // 2. Secondary: Configured Fallback URLs (GitHack, jsDelivr, Staticaly, GitHub raw, Releases)
     if (Array.isArray(CONFIG.APK_FALLBACK_URLS)) {
         CONFIG.APK_FALLBACK_URLS.forEach((u, i) => {
             let label = "גיבוי ענן";
-            if (u.includes('jsdelivr')) label = "jsDelivr CDN";
-            else if (u.includes('raw.githubusercontent')) label = "GitHub Raw";
-            else if (u.includes('releases')) label = "GitHub Releases";
+            if (u.includes('rawcdn.githack.com')) label = "GitHack CDN (Cloudflare)";
+            else if (u.includes('raw.githack.com')) label = "GitHack Dev CDN";
+            else if (u.includes('fastly.jsdelivr.net')) label = "jsDelivr Fastly Edge";
+            else if (u.includes('gcore.jsdelivr.net')) label = "jsDelivr GCore Edge";
+            else if (u.includes('testingcf.jsdelivr.net')) label = "jsDelivr Cloudflare Edge";
+            else if (u.includes('cdn.jsdelivr.net')) label = "jsDelivr Main CDN";
+            else if (u.includes('staticaly.com')) label = "Staticaly CDN";
+            else if (u.includes('raw.githubusercontent')) label = "GitHub Raw Mirror";
+            else if (u.includes('releases')) label = "שרת גיבוי ישיר (GitHub Releases)";
             sources.push({ name: `${label} (${i + 1})`, url: `${u}?t=${Date.now()}` });
         });
     }
@@ -86,16 +115,16 @@ export async function fetchApkBlobWithFallbacks(onProgress) {
     for (const source of sources) {
         try {
             log(`טוען מ-${source.name}...`, 'info');
-            const resp = await fetch(source.url);
+            const resp = await fetchWithTimeout(source.url);
             if (!resp.ok) {
                 log(`טעינה מ-${source.name} נכשלה (קוד: ${resp.status})`, 'warn');
                 continue;
             }
 
-            // Verify content type is not HTML (which occurs on some 404 pages)
+            // Verify content type is not HTML (which occurs on filter block pages or 404 pages)
             const ctype = (resp.headers.get('Content-Type') || '').toLowerCase();
             if (ctype.includes('text/html')) {
-                log(`התקבלה תשובת HTML לא תקינה מ-${source.name}`, 'warn');
+                log(`התקבלה תשובת HTML/חסימת תוכן מ-${source.name}`, 'warn');
                 continue;
             }
 
@@ -118,11 +147,12 @@ export async function fetchApkBlobWithFallbacks(onProgress) {
     }
 
     // 3. Last Resort: Live lookup against GitHub Releases API
-    const ghUsers = [CONFIG.GITHUB_USERNAME, CONFIG.FALLBACK_GITHUB_USERNAME].filter(Boolean);
+    const ghUsers = [CONFIG.INSTALLER_REPO_OWNER, CONFIG.GITHUB_USERNAME, CONFIG.FALLBACK_GITHUB_USERNAME].filter(Boolean);
     for (const user of ghUsers) {
         try {
-            log(`מחפש גרסה עדכנית ב-GitHub (${user}/${CONFIG.GITHUB_REPO_NAME})...`, 'info');
-            const apiResp = await fetch(`https://api.github.com/repos/${user}/${CONFIG.GITHUB_REPO_NAME}/releases/latest`);
+            const repoName = user === CONFIG.INSTALLER_REPO_OWNER ? CONFIG.INSTALLER_REPO_NAME : CONFIG.GITHUB_REPO_NAME;
+            log(`מחפש גרסה עדכנית ב-GitHub Releases (${user}/${repoName})...`, 'info');
+            const apiResp = await fetchWithTimeout(`https://api.github.com/repos/${user}/${repoName}/releases/latest`);
             if (!apiResp.ok) continue;
 
             const data = await apiResp.json();
@@ -130,7 +160,7 @@ export async function fetchApkBlobWithFallbacks(onProgress) {
             if (asset) {
                 const dlUrl = asset.browser_download_url || asset.url;
                 log(`מוריד גרסה רשמית ${data.tag_name}...`, 'info');
-                const resp = await fetch(dlUrl);
+                const resp = await fetchWithTimeout(dlUrl);
                 if (resp.ok) {
                     const blob = await downloadStreamWithProgress(resp, (received, total) => {
                         if (onProgress) onProgress(received, total, `GitHub Release ${data.tag_name}`);
@@ -148,7 +178,7 @@ export async function fetchApkBlobWithFallbacks(onProgress) {
         }
     }
 
-    throw new Error("לא ניתן היה להוריד את קובץ ה-APK מאף מקור.");
+    throw new Error("לא ניתן היה להוריד את קובץ ה-APK מאף מקור (חסימת רשת/נטפרי). באפשרותך לבחור את הקובץ ידנית למטה.");
 }
 
 /**

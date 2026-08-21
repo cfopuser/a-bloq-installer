@@ -407,12 +407,26 @@
 
                 <!-- Manual APK Fallback Container -->
                 <div id="manual-apk-box" class="warning-box" style="display: none; margin-top: 15px;">
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                         <span class="material-symbols-rounded" style="color: #FFB4AB; font-size: 24px;">info</span>
-                        <div>טעינת הקובץ מהרשת נכשלה. באפשרותך לבחור קובץ APK ידנית מהמחשב:</div>
+                        <div><strong>זוהתה בעיית סינון רשת (נטפרי / ISP):</strong> הורדת קובץ ההתקנה נחסמה בדפדפן.</div>
                     </div>
-                    <label class="btn btn-tonal" style="cursor: pointer; height: 40px; font-size: 0.9rem;">
-                        <span class="material-symbols-rounded">file_open</span> בחר קובץ APK מהמחשב
+                    <p style="font-size: 0.88rem; margin-bottom: 12px; color: var(--md-sys-color-on-surface-variant, #ccc);">
+                        באפשרותך להוריד את הקובץ ישירות בדפדפן דרך אחד מקישורי הגיבוי הבאים, ולאחר מכן לבחור אותו:
+                    </p>
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px;">
+                        <a href="https://rawcdn.githack.com/cfopuser/a-bloq-installer/main/apk/normal.apk" target="_blank" class="btn btn-tonal" style="text-decoration: none; height: 36px; font-size: 0.85rem; padding: 0 12px;">
+                            <span class="material-symbols-rounded" style="font-size: 18px;">cloud_download</span> הורדה ישירה (GitHack CDN)
+                        </a>
+                        <a href="https://cdn.jsdelivr.net/gh/cfopuser/a-bloq-installer@main/apk/normal.apk" target="_blank" class="btn btn-tonal" style="text-decoration: none; height: 36px; font-size: 0.85rem; padding: 0 12px;">
+                            <span class="material-symbols-rounded" style="font-size: 18px;">download</span> הורדה ישירה (jsDelivr)
+                        </a>
+                        <a href="https://github.com/another-weird-dude/SecureGuardMDM/releases/latest" target="_blank" class="btn btn-tonal" style="text-decoration: none; height: 36px; font-size: 0.85rem; padding: 0 12px;">
+                            <span class="material-symbols-rounded" style="font-size: 18px;">open_in_new</span> דף שחרורים (GitHub)
+                        </a>
+                    </div>
+                    <label class="btn" style="cursor: pointer; height: 40px; font-size: 0.9rem; width: 100%; justify-content: center;">
+                        <span class="material-symbols-rounded">file_open</span> בחר קובץ APK שהורדת
                         <input type="file" id="manual-apk-input" accept=".apk" style="display: none;" onchange="handleManualApkSelect(this)">
                     </label>
                 </div>
