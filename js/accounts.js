@@ -89,7 +89,7 @@ const ICONS = {
 
 export function getAccountVisuals(type) {
     const t = (type || '').toLowerCase();
-    
+
     // Google Ecosystem
     if (t.includes('google') || t.includes('gmail') || t.includes('tachyon') || t.includes('googlemeet') || t.includes('docs')) {
         if (t.includes('gmail') || t.endsWith('.gm')) {
@@ -496,7 +496,7 @@ export async function getBypassPreview() {
 
 export async function checkAccounts() {
     if (!appState.adbConnected) return showToast("ADB לא מחובר");
-    
+
     const listDiv = document.getElementById('account-list');
     const heroStatus = document.getElementById('account-hero-status');
     const heroTitle = document.getElementById('account-hero-title');
@@ -508,13 +508,13 @@ export async function checkAccounts() {
     const optBypassCard = document.getElementById('opt-bypass-card');
     const optManualCard = document.getElementById('opt-manual-card');
     const manualHeading = document.getElementById('manual-choice-heading');
-    
+
     updateStatusBadge('account-status', '<span class="spin-icon material-symbols-rounded">sync</span> בודק חשבונות...', '');
     if (heroStatus) heroStatus.className = 'account-hero-card checking';
     if (heroTitle) heroTitle.textContent = 'סורק חשבונות פעילים במכשיר...';
     if (heroDesc) heroDesc.textContent = 'מבצע בדיקת עומק של חשבונות המערכת דרך ADB';
     if (heroIcon) heroIcon.textContent = 'sync';
-    
+
     if (actionOptions) actionOptions.style.display = 'none';
     if (bypassBtn) bypassBtn.style.display = 'none';
     if (listDiv) listDiv.innerHTML = '<div class="account-skeleton-loader"><div class="skeleton-row"></div><div class="skeleton-row"></div></div>';
@@ -528,9 +528,9 @@ export async function checkAccounts() {
             updateStatusBadge('account-status', '<span class="material-symbols-rounded">check_circle</span> מכשיר נקי', 'success');
             if (nextBtn) nextBtn.disabled = false;
             appState.accountsClean = true;
-            
+
             if (heroStatus) heroStatus.className = 'account-hero-card clean';
-            if (heroTitle) heroTitle.textContent = 'המכשיר נקי מחשבונות!';
+            if (heroTitle) heroTitle.textContent = 'המכשיר נקי מחשבונות';
             if (heroDesc) heroDesc.textContent = 'לא זוהו חשבונות חוסמים. ניתן להמשיך ישירות לשלב ההתקנה.';
             if (heroIcon) heroIcon.textContent = 'verified_user';
             if (actionOptions) actionOptions.style.display = 'none';
@@ -542,7 +542,7 @@ export async function checkAccounts() {
                             <span class="material-symbols-rounded">check_circle</span>
                         </div>
                         <div class="clean-title">המכשיר נקי מחשבונות ומוכן להמשך</div>
-                        <div class="clean-subtitle">נקי מחשבונות - אין חשבונות פעילים שחוסמים את הגדרת מנהל המכשיר (Device Owner).</div>
+                        <div class="clean-subtitle">נקי מחשבונות - אין חשבונות פעילים שחוסמים את המשך ההתקנה.</div>
                     </div>
                 `;
             }
@@ -559,7 +559,7 @@ export async function checkAccounts() {
                 if (isSdk14) {
                     heroDesc.innerHTML = `<strong>Android 14+ מזוהה:</strong> מטעמי אבטחה של גוגל, נדרשת הסרה ידנית של החשבונות בהגדרות המכשיר לפני ההתקנה.`;
                 } else {
-                    heroDesc.textContent = count === 1 
+                    heroDesc.textContent = count === 1
                         ? 'הסר את החשבון בהגדרות המכשיר, או השתמש במצב עקיפה זמנית (Beta).'
                         : 'הסר את החשבונות בהגדרות המכשיר, או השתמש במצב עקיפה זמנית (Beta).';
                 }
@@ -788,7 +788,7 @@ export async function runAccountBypass() {
 
         // Give Android OS time to update service registrations
         await wait(1500);
-        
+
         if (meterBar) meterBar.style.width = '100%';
         if (headlineEl) headlineEl.textContent = "ההשבתה הזמנית הושלמה בהצלחה!";
         if (counterEl) counterEl.textContent = `הושבתו ${disabledCount} רכיבים. עובר לשלב הבא...`;
@@ -814,14 +814,14 @@ export async function restoreAccounts(silent = false) {
     if (appState.disabledPackages.length === 0) {
         restoreSessionState();
     }
-    
+
     if (appState.disabledPackages.length === 0) {
         if (typeof window !== 'undefined' && window.updateRescueBanner) window.updateRescueBanner();
         return;
     }
 
     if (!silent) log("משחזר חשבונות ורכיבים שהושבתו...", 'info');
-    
+
     const pkgs = [...appState.disabledPackages];
     for (const pkg of pkgs) {
         try {

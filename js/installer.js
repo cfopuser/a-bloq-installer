@@ -214,7 +214,7 @@ export async function checkForUpdates() {
         if (!resp.ok) throw new Error("GitHub Error");
         const data = await resp.json();
         const asset = data.assets && data.assets.find(a => a.name.endsWith('.apk'));
-        
+
         if (asset) {
             foundRelease = asset;
             infoText.innerHTML = `גרסה חדשה: <b>${data.tag_name}</b>`;
@@ -231,7 +231,7 @@ export async function startDownload() {
     const btn = document.getElementById('btn-download');
     const bar = document.getElementById('dl-progress-bar');
     const statusText = document.getElementById('dl-status-text');
-    
+
     btn.disabled = true;
     document.getElementById('dl-progress-wrapper').style.display = 'block';
 
@@ -239,7 +239,7 @@ export async function startDownload() {
         const downloadUrl = foundRelease.browser_download_url || foundRelease.url;
         const resp = await fetch(downloadUrl);
         if (!resp.ok) throw new Error("Download failed");
-        
+
         apkBlob = await downloadStreamWithProgress(resp, (received, total) => {
             if (total > 0) {
                 const percent = Math.round((received / total) * 100);
@@ -249,7 +249,7 @@ export async function startDownload() {
                 if (statusText) statusText.innerText = `מוריד... ${formatBytes(received)}`;
             }
         });
-        
+
         appState.apkDownloaded = true;
         if (statusText) statusText.innerText = "ההורדה הושלמה!";
         setTimeout(() => navigateTo('page-install', 4), 800);
@@ -323,7 +323,7 @@ function showInstallationFailureUI(errorMessage) {
         }
         if (btnBackAcc) btnBackAcc.style.display = 'none';
     } else if (lowerMsg.includes('insufficient_storage') || lowerMsg.includes('מקום פנוי')) {
-        if (errorTitle) errorTitle.innerText = "אין מספיק מקום פנוי בטלפון";
+        if (errorTitle) errorTitle.innerText = "אין מספיק מקום פנוי במכשיר";
         if (errorDesc) {
             errorDesc.innerHTML = `זיכרון האחסון במכשיר מלא.<br><strong>יש לפנות שטח אחסון על ידי מחיקת קבצים או אפליקציות ולנסות שוב.</strong>`;
         }
@@ -335,7 +335,7 @@ function showInstallationFailureUI(errorMessage) {
         }
         if (btnBackAcc) btnBackAcc.style.display = 'none';
     } else if (lowerMsg.includes('unauthorized') || lowerMsg.includes('permission denied')) {
-        if (errorTitle) errorTitle.innerText = "נדרש אישור בטלפון";
+        if (errorTitle) errorTitle.innerText = "נדרש אישור במכשיר";
         if (errorDesc) {
             errorDesc.innerHTML = `המכשיר לא אישר את בקשת החיבור.<br><strong>אנא הביטו במסך המכשיר, סמנו "אפשר תמיד ממחשב זה" ואשרו.</strong>`;
         }
@@ -384,12 +384,12 @@ export async function runInstallation() {
             throw new Error("קיים מנהל מכשיר אחר על המכשיר. יש לבצע איפוס יצרן.");
         }
         updateMilestone(1, 'done');
-        
+
         // 2. Load APK (10% - 35%)
         currentPhase = 2;
         updateMilestone(2, 'active');
         setInstallHeroState('running', "מוריד את קובץ ההתקנה...", "טוען ומאמת את חבילת ההתקנה", 15);
-        
+
         if (!apkBlob) {
             log("מתחיל בטעינת קובץ ההתקנה...", 'info');
             let lastReportedPercent = -1;
@@ -416,9 +416,9 @@ export async function runInstallation() {
         // 3. Push APK to Device (35% - 65%)
         currentPhase = 3;
         updateMilestone(3, 'active');
-        setInstallHeroState('running', "מעביר את הקובץ לטלפון...", "מעביר את קובץ ההתקנה אל המכשיר", 35);
+        setInstallHeroState('running', "מעביר את הקובץ למכשיר...", "מעביר את קובץ ההתקנה אל המכשיר", 35);
         log("מעביר קובץ התקנה למכשיר...", 'info');
-        
+
         const sync = await appState.adbInstance.sync();
         const file = new File([apkBlob], "app.apk");
         await sync.push(file, "/data/local/tmp/app.apk", 0o644, (s, t) => {
@@ -426,24 +426,24 @@ export async function runInstallation() {
                 const ratio = s / t;
                 const overallProgress = 0.35 + ratio * 0.30;
                 updateProgress(overallProgress);
-                setInstallHeroState('running', "מעביר קובץ לטלפון...", `${formatBytes(s)} / ${formatBytes(t)} (${Math.round(ratio * 100)}%)`, overallProgress * 100);
+                setInstallHeroState('running', "מעביר קובץ למכשיר...", `${formatBytes(s)} / ${formatBytes(t)} (${Math.round(ratio * 100)}%)`, overallProgress * 100);
             }
         });
         await sync.quit();
-        
+
         updateMilestone(3, 'done');
         await wait(1000);
 
         // 4. Install APK (65% - 80%)
         currentPhase = 4;
         updateMilestone(4, 'active');
-        setInstallHeroState('running', "מתקין את A-Bloq במכשיר...", "מבצע התקנה שקטה ברקע", 65);
+        setInstallHeroState('running', "מתקין את A-Bloq במכשיר...", "מבצע התקנה", 65);
         updateProgress(0.65);
-        
+
         log("מתקין את A-Bloq במכשיר...", 'info');
         await executeAdbCommand(`pm install -r -g "/data/local/tmp/app.apk"`, "התקנת אפליקציה");
         isApkInstalled = true;
-        
+
         updateMilestone(4, 'done');
         await wait(1500);
 
@@ -452,10 +452,10 @@ export async function runInstallation() {
         updateMilestone(5, 'active');
         setInstallHeroState('running', "מגדיר ניהול ראשי והרשאות...", "מפעיל הרשאות ניהול מאובטחות במערכת", 80);
         updateProgress(0.80);
-        
+
         log("מגדיר ניהול מכשיר...", 'info');
         await executeAdbCommand(`dpm set-device-owner ${CONFIG.TARGET_PACKAGE}/${CONFIG.DEVICE_ADMIN}`, "הגדרת מנהל מכשיר");
-        
+
         updateProgress(0.90);
         log("מעניק הרשאות מערכת...", 'info');
         await executeAdbCommand(`pm grant ${CONFIG.TARGET_PACKAGE} android.permission.WRITE_SECURE_SETTINGS`, "הרשאות מערכת");
@@ -466,7 +466,7 @@ export async function runInstallation() {
         updateMilestone(6, 'active');
         setInstallHeroState('running', "מפעיל את האפליקציה...", "פותח את A-Bloq במכשיר ומשלים את ההתקנה", 95);
         updateProgress(0.95);
-        
+
         log("מפעיל את האפליקציה...", 'info');
         await executeAdbCommand(`am start -n ${CONFIG.TARGET_PACKAGE}/.MainActivity`, "הפעלת אפליקציה");
 

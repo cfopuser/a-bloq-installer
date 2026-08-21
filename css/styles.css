@@ -29,7 +29,7 @@
     --md-sys-color-on-primary: #FFFFFF;
     --md-sys-color-primary-container: #FFDAD6;
     --md-sys-color-on-primary-container: #410002;
-    --md-sys-color-secondary: #775652;
+    --md-sys-color-secondary: #E28B82;
     --md-sys-color-secondary-container: #FFDAD6;
     --md-sys-color-error: #B3261E;
     --md-sys-color-on-surface: #1B1B1B;
@@ -160,6 +160,7 @@ header {
 .stepper {
     display: flex;
     gap: 15px;
+    align-items: center;
 }
 
 .step-dot {
@@ -167,13 +168,13 @@ header {
     height: 12px;
     background-color: var(--md-sys-color-surface-variant);
     border-radius: 50%;
-    transition: all 0.3s ease;
+    transition: background-color 0.35s ease, box-shadow 0.35s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.35s ease;
 }
 
 .step-dot.active {
     background-color: var(--md-sys-color-primary);
     transform: scale(1.3);
-    box-shadow: 0 0 10px var(--md-sys-color-primary);
+    box-shadow: 0 0 12px rgba(242, 139, 130, 0.6), 0 0 0 2px rgba(242, 139, 130, 0.25);
 }
 
 .step-dot.completed {
@@ -402,14 +403,14 @@ h2 {
 }
 
 .account-hero-card.detected {
-    background: rgba(255, 152, 0, 0.08);
-    border-color: rgba(255, 152, 0, 0.3);
+    background: rgba(242, 139, 130, 0.08);
+    border-color: rgba(242, 139, 130, 0.25);
 }
 .account-hero-card.detected .material-symbols-rounded {
-    color: #FFB74D;
+    color: var(--md-sys-color-primary);
 }
 .account-hero-card.detected .hero-title {
-    color: #FFE082;
+    color: #FFFFFF;
 }
 
 .account-hero-card.blocked-sdk14 {
@@ -621,9 +622,9 @@ h2 {
     border: 1px solid rgba(255, 180, 171, 0.3);
 }
 .acc-tag.tag-bypassable {
-    background: rgba(255, 249, 196, 0.15);
-    color: #FFF9C4;
-    border: 1px solid rgba(255, 249, 196, 0.3);
+    background: rgba(242, 139, 130, 0.12);
+    color: var(--md-sys-color-primary);
+    border: 1px solid rgba(242, 139, 130, 0.28);
 }
 
 /* Brand Accent Borders & Wrappers */
@@ -1099,17 +1100,17 @@ video#guide-video {
 .phone-install-progress-bar {
     width: 80%;
     height: 6px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
+    background: var(--md-sys-color-surface-variant);
+    border-radius: var(--border-radius-pill);
     overflow: hidden;
 }
 
 .phone-install-progress-fill {
     width: 10%;
     height: 100%;
-    background: linear-gradient(90deg, #F28B82, #FFB4AB);
-    border-radius: 10px;
-    transition: width 0.4s ease;
+    background-color: var(--md-sys-color-primary);
+    border-radius: var(--border-radius-pill);
+    transition: width 0.4s cubic-bezier(0.2, 0, 0, 1);
 }
 
 /* Phone Footer & Controls */
@@ -1232,19 +1233,18 @@ video#guide-video {
 
 /* Calm Button - Tonal Yellow Version */
 .btn-calm {
-    /* Colors: Using Tertiary (often yellow/gold in MD3) or soft custom yellow */
-    --bg-color: #FFF9C4; /* Paler yellow */
-    --text-color: #795548; /* Softer brown */
-    --border-color: #FFECB3; /* Softer gold */
+    --bg-color: rgba(242, 139, 130, 0.15);
+    --text-color: var(--md-sys-color-primary);
+    --border-color: rgba(242, 139, 130, 0.35);
 
     background: var(--bg-color);
     color: var(--text-color);
-    border: 1px solid transparent; /* Keep it clean by default */
+    border: 1px solid var(--border-color);
     
     /* Size: Increased from 32px to 40px for better visibility */
     height: 40px;
     padding: 0 20px;
-    border-radius: 12px; /* Slightly rounder for a modern look */
+    border-radius: 12px;
     
     /* Typography */
     font-size: 0.9rem;
@@ -1263,17 +1263,17 @@ video#guide-video {
 
 /* Hover: Becomes more "Button-like" but stays calm */
 .btn-calm:hover {
-    background: #f8e8a5; /* Slightly deeper yellow */
-    border-color: var(--border-color);
-    color: #78350f;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    background: rgba(242, 139, 130, 0.25);
+    border-color: rgba(242, 139, 130, 0.5);
+    color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(242, 139, 130, 0.2);
     transform: translateY(-1px);
 }
 
 /* Active: Pressed state */
 .btn-calm:active {
     transform: translateY(0px);
-    background: #b18e1e;
+    background: rgba(242, 139, 130, 0.35);
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -1328,9 +1328,9 @@ video#guide-video {
 /* Material Design 3 Standard Progress Bar */
 .progress-wrapper {
     width: 100%;
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--md-sys-color-surface-variant);
     height: 6px;
-    border-radius: 6px;
+    border-radius: var(--border-radius-pill);
     margin: 8px 0 0 0;
     overflow: hidden;
     position: relative;
@@ -1341,8 +1341,8 @@ video#guide-video {
     height: 100%;
     width: 0%;
     background-color: var(--md-sys-color-primary);
-    border-radius: 6px;
-    transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: var(--border-radius-pill);
+    transition: width 0.35s cubic-bezier(0.2, 0, 0, 1);
     box-shadow: none;
     position: relative;
 }
@@ -2388,7 +2388,7 @@ video#guide-video {
 
 .modal-icon-warn {
     font-size: 26px;
-    color: #FFB74D;
+    color: var(--md-sys-color-primary);
 }
 
 .modal-icon-info {
@@ -2486,7 +2486,7 @@ video#guide-video {
 
 .preview-pkg-item .material-symbols-rounded {
     font-size: 16px;
-    color: #FFB74D;
+    color: var(--md-sys-color-primary);
 }
 
 .modal-disclaimer {
@@ -2568,24 +2568,24 @@ video#guide-video {
     align-items: center;
     padding: 16px 20px;
     gap: 16px;
-    background: linear-gradient(135deg, rgba(255, 183, 77, 0.08) 0%, rgba(33, 150, 243, 0.06) 100%);
-    border: 1px solid rgba(255, 183, 77, 0.3);
+    background: linear-gradient(135deg, rgba(242, 139, 130, 0.08) 0%, rgba(73, 69, 79, 0.35) 100%);
+    border: 1px solid rgba(242, 139, 130, 0.3);
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
 }
 
 .recommended-choice:hover {
     transform: translateY(-2px);
-    border-color: rgba(255, 183, 77, 0.6);
-    background: linear-gradient(135deg, rgba(255, 183, 77, 0.14) 0%, rgba(33, 150, 243, 0.1) 100%);
-    box-shadow: 0 6px 18px rgba(255, 183, 77, 0.15);
+    border-color: rgba(242, 139, 130, 0.6);
+    background: linear-gradient(135deg, rgba(242, 139, 130, 0.14) 0%, rgba(73, 69, 79, 0.45) 100%);
+    box-shadow: 0 6px 20px rgba(242, 139, 130, 0.15);
 }
 
 .choice-icon-wrap {
     width: 48px;
     height: 48px;
     border-radius: 14px;
-    background: rgba(255, 183, 77, 0.15);
+    background: rgba(242, 139, 130, 0.15);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2594,7 +2594,7 @@ video#guide-video {
 
 .choice-icon-wrap .material-symbols-rounded {
     font-size: 26px;
-    color: #FFB74D;
+    color: var(--md-sys-color-primary);
 }
 
 .choice-info {
@@ -2616,11 +2616,11 @@ video#guide-video {
 .choice-pill-recommended {
     font-size: 0.72rem;
     font-weight: 700;
-    background: rgba(255, 183, 77, 0.2);
-    color: #FFD54F;
+    background: rgba(242, 139, 130, 0.2);
+    color: #FFDAD6;
     padding: 2px 8px;
     border-radius: 12px;
-    border: 1px solid rgba(255, 183, 77, 0.4);
+    border: 1px solid rgba(242, 139, 130, 0.4);
 }
 
 .choice-desc {
@@ -2633,8 +2633,8 @@ video#guide-video {
     padding: 10px 18px;
     font-size: 0.9rem;
     font-weight: 600;
-    background: #FFB74D;
-    color: #2E1B00;
+    background: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
     border-radius: 12px;
     display: inline-flex;
     align-items: center;
@@ -2646,8 +2646,10 @@ video#guide-video {
 }
 
 .btn-choice-btn:hover {
-    background: #FFE082;
+    background: #FFB4AB;
+    color: #601410;
     transform: scale(1.03);
+    box-shadow: 0 4px 12px rgba(242, 139, 130, 0.3);
 }
 
 /* Manual Choice Accordion */
@@ -2724,7 +2726,7 @@ details[open] .expand-arrow {
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    background: rgba(255, 183, 77, 0.12);
+    background: var(--md-sys-color-primary-container);
     flex-shrink: 0;
 }
 
@@ -2732,13 +2734,14 @@ details[open] .expand-arrow {
     position: absolute;
     inset: -3px;
     border-radius: 50%;
-    border: 2px solid rgba(255, 183, 77, 0.5);
+    border: 2px solid var(--md-sys-color-primary);
+    opacity: 0.35;
     animation: pulseRing 1.8s infinite;
 }
 
 .glow-spinner-box .stat-icon {
     font-size: 24px;
-    color: #FFB74D;
+    color: var(--md-sys-color-on-primary-container);
 }
 
 .stat-text-wrap {
@@ -2749,34 +2752,34 @@ details[open] .expand-arrow {
 .stat-headline {
     font-size: 1.05rem;
     font-weight: 600;
-    color: #FFFFFF;
+    color: var(--md-sys-color-on-surface);
     margin-bottom: 2px;
 }
 
 .stat-sub {
     font-size: 0.85rem;
-    color: #FFB74D;
+    color: var(--md-sys-color-outline);
 }
 
 .progress-meter-container {
-    height: 8px;
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 8px;
+    height: 6px;
+    background: var(--md-sys-color-surface-variant);
+    border-radius: var(--border-radius-pill);
     overflow: hidden;
     margin-bottom: 14px;
 }
 
 .progress-meter-fill {
     height: 100%;
-    background: linear-gradient(90deg, #FFB74D 0%, #4CAF50 100%);
-    border-radius: 8px;
-    transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 0 10px rgba(255, 183, 77, 0.5);
+    background-color: var(--md-sys-color-primary);
+    border-radius: var(--border-radius-pill);
+    transition: width 0.35s cubic-bezier(0.2, 0, 0, 1);
+    box-shadow: none;
 }
 
 .bypass-checklist-box {
-    background: #121316;
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--md-sys-color-surface-variant);
     border-radius: 12px;
     padding: 10px 14px;
     max-height: 140px;
@@ -2801,13 +2804,13 @@ details[open] .expand-arrow {
 }
 
 .live-checklist-row.status-pending {
-    color: #74777F;
+    color: var(--md-sys-color-outline);
     opacity: 0.7;
 }
 
 .live-checklist-row.status-active {
-    color: #FFB74D;
-    background: rgba(255, 183, 77, 0.1);
+    color: var(--md-sys-color-primary);
+    background: rgba(242, 139, 130, 0.12);
     font-weight: bold;
 }
 
@@ -2831,7 +2834,8 @@ details[open] .expand-arrow {
     font-size: 0.72rem;
     padding: 1px 6px;
     border-radius: 4px;
-    background: rgba(255, 255, 255, 0.06);
+    background: var(--md-sys-color-surface-variant);
+    color: var(--md-sys-color-on-surface-variant);
     direction: rtl;
 }
 
@@ -2890,8 +2894,8 @@ details[open] .expand-arrow {
 
 /* --- Global Contextual Emergency Restore Banner --- */
 .global-rescue-bar {
-    background: rgba(255, 183, 77, 0.12);
-    border: 1px solid rgba(255, 183, 77, 0.35);
+    background: rgba(242, 139, 130, 0.1);
+    border: 1px solid rgba(242, 139, 130, 0.3);
     border-radius: 16px;
     padding: 16px 20px;
     margin-bottom: 24px;
@@ -2912,7 +2916,7 @@ details[open] .expand-arrow {
 
 .rescue-icon {
     font-size: 32px;
-    color: #FFB74D;
+    color: var(--md-sys-color-primary);
     flex-shrink: 0;
 }
 
@@ -2925,7 +2929,7 @@ details[open] .expand-arrow {
 .rescue-text strong {
     font-size: 1rem;
     font-weight: 700;
-    color: #FFE082;
+    color: #FFFFFF;
 }
 
 .rescue-text span {
@@ -2939,8 +2943,8 @@ details[open] .expand-arrow {
 }
 
 .btn-rescue-action {
-    background: #FFB74D;
-    color: #3E2723;
+    background: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
     font-weight: 600;
     border-radius: 50px;
     padding: 0 20px;
@@ -2954,9 +2958,10 @@ details[open] .expand-arrow {
 }
 
 .btn-rescue-action:hover {
-    background: #FFA726;
+    background: #FFB4AB;
+    color: #601410;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(255, 183, 77, 0.3);
+    box-shadow: 0 4px 12px rgba(242, 139, 130, 0.3);
 }
 
 /* --- Unsupported Browser Compatibility Card --- */
@@ -3121,12 +3126,12 @@ body.light-theme .step-dot {
 [data-theme="light"] .step-dot.active,
 body.light-theme .step-dot.active {
     background-color: #B3261E;
-    box-shadow: 0 0 10px rgba(179, 38, 30, 0.4);
+    box-shadow: 0 2px 8px rgba(179, 38, 30, 0.35), 0 0 0 2.5px rgba(179, 38, 30, 0.18);
 }
 
 [data-theme="light"] .step-dot.completed,
 body.light-theme .step-dot.completed {
-    background-color: #775652;
+    background-color: #E28B82;
 }
 
 /* Content Panel & General Containers */
@@ -3266,16 +3271,16 @@ body.light-theme .account-hero-card.clean .hero-desc {
 
 [data-theme="light"] .account-hero-card.detected,
 body.light-theme .account-hero-card.detected {
-    background: rgba(230, 81, 0, 0.07);
-    border-color: rgba(230, 81, 0, 0.28);
+    background: rgba(179, 38, 30, 0.04);
+    border-color: rgba(179, 38, 30, 0.18);
 }
 [data-theme="light"] .account-hero-card.detected .material-symbols-rounded,
 body.light-theme .account-hero-card.detected .material-symbols-rounded {
-    color: #E65100;
+    color: #B3261E;
 }
 [data-theme="light"] .account-hero-card.detected .hero-title,
 body.light-theme .account-hero-card.detected .hero-title {
-    color: #BF360C;
+    color: #8C1D18;
 }
 [data-theme="light"] .account-hero-card.detected .hero-desc,
 body.light-theme .account-hero-card.detected .hero-desc {
@@ -3391,9 +3396,9 @@ body.light-theme .acc-tag.tag-manual {
 
 [data-theme="light"] .acc-tag.tag-bypassable,
 body.light-theme .acc-tag.tag-bypassable {
-    background: rgba(245, 124, 0, 0.1);
-    color: #E65100;
-    border: 1px solid rgba(245, 124, 0, 0.25);
+    background: rgba(179, 38, 30, 0.06);
+    color: #B3261E;
+    border: 1px solid rgba(179, 38, 30, 0.2);
 }
 
 /* Action Choice Cards in Light Mode */
@@ -3405,16 +3410,26 @@ body.light-theme .action-choice-card {
 
 [data-theme="light"] .recommended-choice,
 body.light-theme .recommended-choice {
-    background: linear-gradient(135deg, #FFFDF7 0%, #FFF8F6 100%);
-    border: 1.5px solid #FFB74D;
-    box-shadow: 0 4px 14px rgba(255, 183, 77, 0.15);
+    background: linear-gradient(135deg, rgba(179, 38, 30, 0.03) 0%, #FFFFFF 100%);
+    border: 1.5px solid rgba(179, 38, 30, 0.22);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
 }
 
 [data-theme="light"] .recommended-choice:hover,
 body.light-theme .recommended-choice:hover {
-    background: linear-gradient(135deg, #FFF9EB 0%, #FFF3F0 100%);
-    border-color: #FFA726;
-    box-shadow: 0 6px 20px rgba(255, 183, 77, 0.22);
+    background: linear-gradient(135deg, rgba(179, 38, 30, 0.06) 0%, #FFFFFF 100%);
+    border-color: #B3261E;
+    box-shadow: 0 6px 20px rgba(179, 38, 30, 0.12);
+}
+
+[data-theme="light"] .choice-icon-wrap,
+body.light-theme .choice-icon-wrap {
+    background: rgba(179, 38, 30, 0.08);
+}
+
+[data-theme="light"] .choice-icon-wrap .material-symbols-rounded,
+body.light-theme .choice-icon-wrap .material-symbols-rounded {
+    color: #B3261E;
 }
 
 [data-theme="light"] .choice-title-row,
@@ -3429,9 +3444,9 @@ body.light-theme .choice-desc {
 
 [data-theme="light"] .choice-pill-recommended,
 body.light-theme .choice-pill-recommended {
-    background: #FFF3E0;
-    color: #E65100;
-    border: 1px solid #FFE0B2;
+    background: rgba(179, 38, 30, 0.08);
+    color: #8C1D18;
+    border: 1px solid rgba(179, 38, 30, 0.25);
 }
 
 [data-theme="light"] .btn-choice-btn,
@@ -3445,6 +3460,7 @@ body.light-theme .btn-choice-btn {
 body.light-theme .btn-choice-btn:hover {
     background: #8C1D18;
     color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(179, 38, 30, 0.35);
 }
 
 [data-theme="light"] .manual-summary,
@@ -3622,6 +3638,11 @@ body.light-theme .modal-body {
     color: #44474E;
 }
 
+[data-theme="light"] .modal-icon-warn,
+body.light-theme .modal-icon-warn {
+    color: #B3261E;
+}
+
 [data-theme="light"] .modal-lead,
 body.light-theme .modal-lead {
     color: #1B1B1B;
@@ -3650,6 +3671,11 @@ body.light-theme .bypass-checklist-box {
 body.light-theme .preview-pkg-item {
     color: #0D47A1;
     border-bottom: 1px solid #ECEFF1;
+}
+
+[data-theme="light"] .preview-pkg-item .material-symbols-rounded,
+body.light-theme .preview-pkg-item .material-symbols-rounded {
+    color: #B3261E;
 }
 
 [data-theme="light"] .modal-instruction-card,
@@ -3888,12 +3914,36 @@ body.light-theme .phone-install-pulse-ring-outer {
 
 [data-theme="light"] .phone-install-progress-bar,
 body.light-theme .phone-install-progress-bar {
-    background: rgba(0, 0, 0, 0.08);
+    background: var(--md-sys-color-surface-variant);
 }
 
 [data-theme="light"] .phone-install-progress-fill,
 body.light-theme .phone-install-progress-fill {
-    background: linear-gradient(90deg, #B3261E, #FF8A80);
+    background-color: var(--md-sys-color-primary);
+}
+
+[data-theme="light"] .bypass-checklist-box,
+body.light-theme .bypass-checklist-box {
+    background: #F8F9FA;
+    border-color: #E0E0E0;
+}
+
+[data-theme="light"] .live-checklist-row.status-active,
+body.light-theme .live-checklist-row.status-active {
+    background: rgba(179, 38, 30, 0.08);
+    color: var(--md-sys-color-primary);
+}
+
+[data-theme="light"] .modal-reassurance-card,
+body.light-theme .modal-reassurance-card {
+    background: #E8F5E9;
+    border-color: #A5D6A7;
+    color: #1B5E20;
+}
+
+[data-theme="light"] .modal-reassurance-card .material-symbols-rounded,
+body.light-theme .modal-reassurance-card .material-symbols-rounded {
+    color: #2E7D32;
 }
 
 [data-theme="light"] .phone-install-logo,

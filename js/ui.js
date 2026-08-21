@@ -15,7 +15,7 @@ export function setTheme(theme) {
     document.body.classList.toggle('light-theme', isLight);
     document.body.classList.toggle('dark-theme', !isLight);
     localStorage.setItem('abloq-installer-theme', theme);
-    
+
     const icon = document.getElementById('theme-toggle-icon');
     const btn = document.getElementById('theme-toggle-btn');
     if (icon) {
@@ -42,7 +42,7 @@ export function initTheme() {
         const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
         setTheme(prefersDark ? 'dark' : 'light');
     }
-    
+
     if (window.matchMedia) {
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
             if (!localStorage.getItem('abloq-installer-theme')) {
@@ -57,9 +57,9 @@ export function log(text, type = 'info') {
     if (el) {
         const div = document.createElement('div');
         div.className = `log-entry log-${type}`;
-        
+
         const time = new Date().toLocaleTimeString('en-GB', { hour12: false });
-        
+
         let tagLabel = 'INFO';
         if (type === 'success') tagLabel = 'OK';
         else if (type === 'warn') tagLabel = 'WARN';
@@ -70,7 +70,7 @@ export function log(text, type = 'info') {
         const sanitizedText = String(text).replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
         div.innerHTML = `<span class="log-time">[${time}]</span><span class="log-tag">${tagLabel}</span><span class="log-text">${sanitizedText.replace(/\n/g, '<br>')}</span>`;
-        
+
         el.appendChild(div);
         el.scrollTop = el.scrollHeight;
 
@@ -113,16 +113,16 @@ let toastTimer = null;
 export function showToast(message, icon = 'info') {
     const x = document.getElementById("snackbar");
     if (!x) return;
-    
+
     if (toastTimer) {
         clearTimeout(toastTimer);
     }
-    
+
     x.innerHTML = `<span class="material-symbols-rounded toast-icon">${icon}</span><span class="toast-text">${message}</span>`;
     x.className = "show";
-    
-    toastTimer = setTimeout(() => { 
-        x.className = x.className.replace("show", "").trim(); 
+
+    toastTimer = setTimeout(() => {
+        x.className = x.className.replace("show", "").trim();
     }, 1800);
 }
 
@@ -137,7 +137,7 @@ export async function copyLogToClipboard() {
     const date = new Date().toLocaleString();
     const modelInfo = document.getElementById('adb-status')?.innerText || "Unknown";
     const sdk = appState.sdkVersion || "Unknown";
-    
+
     // Format text
     let logContent = "";
     el.childNodes.forEach(node => {
@@ -189,10 +189,10 @@ export function navigateTo(pageId, stepIndex) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     const targetPage = document.getElementById(pageId);
     if (targetPage) targetPage.classList.add('active');
-    
+
     const visibleDots = Array.from(document.querySelectorAll('.step-dot')).filter(dot => dot.style.display !== 'none');
     visibleDots.forEach((dot, index) => {
-        dot.classList.remove('active', 'completed'); 
+        dot.classList.remove('active', 'completed');
         if (index === stepIndex) dot.classList.add('active');
         if (index < stepIndex) dot.classList.add('completed');
     });
@@ -241,7 +241,7 @@ export const PHONE_GUIDE_CONFIG = {
         mode: 'installing',
         badgeIcon: 'sync',
         title: 'התקנת A-Bloq במכשיר',
-        info: 'מבצע התקנה שקטה והגדרת הרשאות מערכת',
+        info: 'מבצע התקנה והגדרת הרשאות מערכת',
         videoSrc: null,
         installTitle: 'מתכונן להתקנה...',
         installDesc: 'בודק הרשאות ומכין את תהליך ההתקנה',
@@ -265,7 +265,7 @@ function safeVideoPause(video) {
     if (!video) return;
     try {
         video.pause?.();
-    } catch (e) {}
+    } catch (e) { }
     updatePlayIcon(false);
 }
 
@@ -273,12 +273,12 @@ function safeVideoLoad(video) {
     if (!video) return;
     try {
         video.load?.();
-    } catch (e) {}
+    } catch (e) { }
 }
 
 export function updatePhoneGuide(pageId) {
     const config = PHONE_GUIDE_CONFIG[pageId] || PHONE_GUIDE_CONFIG['page-adb'];
-    
+
     // 1. Update Header badge / title
     const badgeEl = document.getElementById('phone-guide-badge') || document.getElementById('phone-activity-badge');
     const badgeIconEl = document.getElementById('phone-badge-icon');
@@ -346,7 +346,7 @@ export function setPhonePanelState(mode, data = {}) {
         if (badgeEl) badgeEl.className = 'phone-guide-badge badge-installing';
         if (badgeIconEl) badgeIconEl.textContent = 'sync';
         if (titleEl) titleEl.textContent = data.mainTitle || 'התקנת A-Bloq במכשיר';
-        if (infoTextEl) infoTextEl.textContent = data.info || 'מבצע התקנה שקטה והגדרת הרשאות מערכת';
+        if (infoTextEl) infoTextEl.textContent = data.info || 'מבצע התקנה והגדרת הרשאות מערכת';
 
         if (video) { safeVideoPause(video); video.style.display = 'none'; }
         if (phoneControls) phoneControls.style.display = 'none';
@@ -416,7 +416,7 @@ export function replayVideo() {
     if (vid && vid.style.display !== 'none') {
         try {
             vid.currentTime = 0;
-        } catch(e) {}
+        } catch (e) { }
         safeVideoPlay(vid);
         showOverlayRipple('replay');
     }
@@ -518,7 +518,7 @@ export function setInstallHeroState(statusType, title, desc, percentVal) {
 export function updateProgress(val, activeMilestone = null, heroTitle = null, heroDesc = null) {
     const bar = document.getElementById('install-progress-bar');
     const percent = Math.min(100, Math.max(0, Math.round(val * 100)));
-    
+
     if (bar) bar.style.width = percent + "%";
 
     const percentEl = document.getElementById('install-hero-percent');
@@ -553,12 +553,12 @@ export function startNewDeviceInstall() {
     appState.disabledPackages = [];
     appState.accountsClean = false;
     appState.apkDownloaded = false;
-    
+
     if (window.resetApkBlob) window.resetApkBlob();
 
     resetMilestones();
     clearConsoleLog();
-    
+
     const guideVideo = document.getElementById('guide-video');
     if (guideVideo) {
         guideVideo.removeAttribute('data-active-src');
@@ -589,4 +589,4 @@ export function startNewDeviceInstall() {
 
     showToast("הזיכרון אופס. מוכן להתקנה על מכשיר חדש");
     navigateTo('page-main', 0);
-}
+}

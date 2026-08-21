@@ -1,22 +1,26 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">    
-   
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>מתקין A-Bloq</title>
     <link rel="icon" type="image/png" href="images/a-bloq-logo.png">
-    
+
     <!-- Google Fonts & Material Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Heebo:wght@300;400;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Heebo:wght@300;400;700&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0"
+        rel="stylesheet" />
+
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/styles.css">
 
     <!-- Anti-flash Theme Init -->
     <script>
-        (function() {
+        (function () {
             try {
                 var saved = localStorage.getItem('abloq-installer-theme');
                 var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -25,13 +29,14 @@
                 if (theme === 'light') {
                     document.documentElement.classList.add('light-theme');
                 }
-            } catch(e) {}
+            } catch (e) { }
         })();
     </script>
 
     <!-- WebADB Library -->
     <script src="js/webadb.js"></script>
 </head>
+
 <body class="welcome-mode">
 
     <header>
@@ -40,7 +45,8 @@
             <span>מתקין A-Bloq</span>
         </div>
         <div class="header-actions">
-            <button id="theme-toggle-btn" class="theme-toggle-btn" onclick="toggleTheme()" title="החלף ערכת נושא (בהיר / כהה)" aria-label="החלף ערכת נושא">
+            <button id="theme-toggle-btn" class="theme-toggle-btn" onclick="toggleTheme()"
+                title="החלף ערכת נושא (בהיר / כהה)" aria-label="החלף ערכת נושא">
                 <span class="material-symbols-rounded" id="theme-toggle-icon">light_mode</span>
             </button>
             <div class="stepper">
@@ -63,7 +69,8 @@
                     <span class="material-symbols-rounded rescue-icon">build_circle</span>
                     <div class="rescue-text">
                         <strong id="rescue-banner-title">זוהו רכיבי מערכת מושבתים מהפעלה קודמת</strong>
-                        <span id="rescue-banner-desc">נמצאו חבילות שהושבתו זמנית ולא שוחזרו. מומלץ לשחזרן כדי להחזיר את המכשיר לתקינות מלאה.</span>
+                        <span id="rescue-banner-desc">נמצאו חבילות שהושבתו זמנית ולא שוחזרו. מומלץ לשחזרן כדי להחזיר את
+                            המכשיר לתקינות מלאה.</span>
                     </div>
                 </div>
                 <div class="rescue-actions">
@@ -74,12 +81,13 @@
             </div>
 
             <!-- PAGE 0: Welcome -->
-            <div id="page-main" class="page active" style="justify-content: center; align-items: center; text-align: center;">
+            <div id="page-main" class="page active"
+                style="justify-content: center; align-items: center; text-align: center;">
                 <div id="page-main-content" class="welcome-brand-hero">
                     <div class="brand-badge-container">
                         <img src="images/a-bloq-logo.png" alt="A-Bloq Logo" class="welcome-brand-logo">
                     </div>
-                    <h2 class="welcome-title">ברוכים הבאים ל-A-Bloq</h2>
+                    <h2 class="welcome-title">ברוכים הבאים</h2>
                     <p class="welcome-subtitle">
                         כלי זה יסייע לכם להתקין ולהגדיר את A-Bloq על מכשיר האנדרואיד שלכם בקלות ובמהירות.
                     </p>
@@ -97,13 +105,18 @@
                         התקנה זו דורשת תמיכה מלאה בתקן <strong>WebUSB</strong> לצורך תקשורת ישירה ומאובטחת עם המכשיר.
                     </p>
                     <div class="compat-browser-grid">
-                        <div class="compat-browser-chip"><span class="material-symbols-rounded">check_circle</span> Google Chrome</div>
-                        <div class="compat-browser-chip"><span class="material-symbols-rounded">check_circle</span> Microsoft Edge</div>
-                        <div class="compat-browser-chip"><span class="material-symbols-rounded">check_circle</span> Brave Browser</div>
-                        <div class="compat-browser-chip"><span class="material-symbols-rounded">check_circle</span> Opera</div>
+                        <div class="compat-browser-chip"><span class="material-symbols-rounded">check_circle</span>
+                            Google Chrome</div>
+                        <div class="compat-browser-chip"><span class="material-symbols-rounded">check_circle</span>
+                            Microsoft Edge</div>
+                        <div class="compat-browser-chip"><span class="material-symbols-rounded">check_circle</span>
+                            Brave Browser</div>
+                        <div class="compat-browser-chip"><span class="material-symbols-rounded">check_circle</span>
+                            Opera</div>
                     </div>
                     <div class="compat-hint">
-                        <span class="material-symbols-rounded">info</span> אנא פתחו אתר זה באחד מהדפדפנים הנתמכים כדי להמשיך.
+                        <span class="material-symbols-rounded">info</span> אנא פתחו אתר זה באחד מהדפדפנים הנתמכים כדי
+                        להמשיך.
                     </div>
                 </div>
             </div>
@@ -117,13 +130,29 @@
                 </div>
 
                 <div style="flex-grow: 1;">
-                    <div class="list-item"><div class="icon"><span class="material-symbols-rounded">cable</span></div> חברו את המכשיר למחשב באמצעות כבל USB</div>
-                    <div class="list-item"><div class="icon"><span class="material-symbols-rounded">info</span></div> הכנסו להגדרות -> מידע על המכשיר</div>
-                    <div class="list-item"><div class="icon"><span class="material-symbols-rounded">touch_app</span></div> לחצו 7 פעמים על "מספר Build"</div>
-                    <div class="list-item"><div class="icon"><span class="material-symbols-rounded">developer_mode</span></div> חזרו למערכת -> אפשרויות מפתחים</div>
-                    <div class="list-item"><div class="icon"><span class="material-symbols-rounded">toggle_on</span></div> הפעילו את "ניפוי באגים ב-USB"</div>
+                    <div class="list-item">
+                        <div class="icon"><span class="material-symbols-rounded">cable</span></div> חברו את המכשיר למחשב
+                        באמצעות כבל USB
+                    </div>
+                    <div class="list-item">
+                        <div class="icon"><span class="material-symbols-rounded">info</span></div> הכנסו להגדרות -> מידע
+                        על המכשיר
+                    </div>
+                    <div class="list-item">
+                        <div class="icon"><span class="material-symbols-rounded">touch_app</span></div> לחצו 7 פעמים על
+                        "מספר Build"
+                    </div>
+                    <div class="list-item">
+                        <div class="icon"><span class="material-symbols-rounded">developer_mode</span></div> חזרו למערכת
+                        -> אפשרויות מפתחים
+                    </div>
+                    <div class="list-item">
+                        <div class="icon"><span class="material-symbols-rounded">toggle_on</span></div> הפעילו את "ניפוי
+                        באגים ב-USB"
+                    </div>
                     <div class="list-item" style="color: var(--md-sys-color-primary);">
-                        <div class="icon" style="background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary);">
+                        <div class="icon"
+                            style="background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary);">
                             <span class="material-symbols-rounded" style="font-size: 16px;">priority_high</span>
                         </div>
                         בחלון שיופיע במכשיר, סמנו "אפשר תמיד ממחשב זה" ואשרו.
@@ -136,7 +165,8 @@
                     </div>
                     <div>
                         <button id="btn-connect" class="btn" onclick="connectAdb()">חבר מכשיר</button>
-                        <button id="btn-next-adb" class="btn" onclick="navigateTo('page-accounts', 2)" disabled style="display:none;">
+                        <button id="btn-next-adb" class="btn" onclick="navigateTo('page-accounts', 2)" disabled
+                            style="display:none;">
                             הבא <span class="material-symbols-rounded">arrow_back</span>
                         </button>
                     </div>
@@ -163,9 +193,10 @@
 
                 <!-- Action Options Container (Shown when accounts detected) -->
                 <div id="account-action-options" class="account-action-options-group" style="display: none;">
-                    
+
                     <!-- Choice 1: Automated 1-Click Bypass (On Android < 14) -->
-                    <div id="opt-bypass-card" class="action-choice-card recommended-choice" onclick="handleBypassTriggerClick()">
+                    <div id="opt-bypass-card" class="action-choice-card recommended-choice"
+                        onclick="handleBypassTriggerClick()">
                         <div class="choice-icon-wrap">
                             <span class="material-symbols-rounded">auto_fix_high</span>
                         </div>
@@ -174,9 +205,11 @@
                                 <strong>התקנה מהירה ללא הסרת חשבונות</strong>
                                 <span class="choice-pill-recommended">מומלץ (Beta)</span>
                             </div>
-                            <div class="choice-desc">השבתה זמנית של שירותי האימות בלחיצה אחת, ללא מחיקת נתונים, ושחזורם האוטומטי בסיום.</div>
+                            <div class="choice-desc">השבתה זמנית של שירותי האימות בלחיצה אחת, ללא מחיקת נתונים, ושחזורם
+                                האוטומטי בסיום.</div>
                         </div>
-                        <button id="btn-bypass-trigger" class="btn btn-choice-btn" type="button" onclick="handleBypassTriggerClick()">
+                        <button id="btn-bypass-trigger" class="btn btn-choice-btn" type="button"
+                            onclick="handleBypassTriggerClick()">
                             <span class="material-symbols-rounded">bolt</span> הפעל עקיפה
                         </button>
                     </div>
@@ -191,8 +224,14 @@
                             <span class="material-symbols-rounded expand-arrow">expand_more</span>
                         </summary>
                         <div class="manual-steps-body">
-                            <div class="list-item"><div class="icon"><span class="material-symbols-rounded">manage_accounts</span></div> הכנסו להגדרות המכשיר -> חשבונות וגיבוי -> ניהול חשבונות</div>
-                            <div class="list-item"><div class="icon"><span class="material-symbols-rounded">person_remove</span></div> בחרו כל חשבון פעיל (Google, Samsung וכו') והקישו "הסר חשבון"</div>
+                            <div class="list-item">
+                                <div class="icon"><span class="material-symbols-rounded">manage_accounts</span></div>
+                                הכנסו להגדרות המכשיר -> חשבונות וגיבוי -> ניהול חשבונות
+                            </div>
+                            <div class="list-item">
+                                <div class="icon"><span class="material-symbols-rounded">person_remove</span></div> בחרו
+                                כל חשבון פעיל (Google, Samsung וכו') והקישו "הסר חשבון"
+                            </div>
                             <div class="manual-action-row">
                                 <button class="btn btn-tonal" onclick="checkAccounts()">
                                     <span class="material-symbols-rounded">refresh</span> בדוק שוב לאחר ההסרה
@@ -202,7 +241,7 @@
                     </details>
 
                 </div>
-                
+
                 <!-- Fill space -->
                 <div style="flex-grow: 1;"></div>
 
@@ -232,7 +271,8 @@
                     <div id="update-info-text">יוצר קשר עם שרתי GitHub...</div>
                 </div>
 
-                <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <div
+                    style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
                     <h3 id="dl-status-text" style="font-weight: 300; margin: 0;"></h3>
                     <div class="progress-wrapper" id="dl-progress-wrapper">
                         <div class="progress-fill" id="dl-progress-bar"></div>
@@ -240,7 +280,8 @@
                 </div>
 
                 <div class="action-area">
-                    <button class="btn btn-tonal" onclick="navigateTo('page-install', 4)">דלג והשתמש בגרסה קיימת</button>
+                    <button class="btn btn-tonal" onclick="navigateTo('page-install', 4)">דלג והשתמש בגרסה
+                        קיימת</button>
                     <button id="btn-download" class="btn" onclick="startDownload()" disabled>
                         <span class="material-symbols-rounded">download</span> הורד ועדכן
                     </button>
@@ -251,10 +292,11 @@
             <div id="page-install" class="page">
                 <div class="install-header-row">
                     <div>
-                        <h2>התקנה והגדרת המכשיר</h2>
-                        <p class="install-subtitle">הגדרת A-Bloq כמנהל המכשיר בצורה מאובטחת וישירה</p>
+                        <h2>התקנה</h2>
+                        <p class="install-subtitle">התקנת A-Bloq</p>
                     </div>
-                    <button class="btn btn-tonal btn-console-trigger" type="button" onclick="openConsoleModal()" title="פתח יומן פקודות טכני">
+                    <button class="btn btn-tonal btn-console-trigger" type="button" onclick="openConsoleModal()"
+                        title="פתח יומן פקודות טכני">
                         <span class="material-symbols-rounded">terminal</span>
                         <span>יומן פקודות</span>
                         <span id="console-badge-count" class="console-count-badge">0</span>
@@ -271,8 +313,9 @@
                             <span class="install-hero-title" id="install-hero-title">מתכונן להתקנה...</span>
                             <span class="install-hero-percent" id="install-hero-percent">0%</span>
                         </div>
-                        <div class="install-hero-desc" id="install-hero-desc">בודק הרשאות ומכין את תהליך ההתקנה של A-Bloq</div>
-                        
+                        <div class="install-hero-desc" id="install-hero-desc">בודק הרשאות ומכין את תהליך ההתקנה של
+                            A-Bloq</div>
+
                         <!-- Material 3 Standard Progress Bar -->
                         <div class="progress-wrapper" id="install-progress-wrapper" style="display: block;">
                             <div class="progress-fill" id="install-progress-bar"></div>
@@ -295,7 +338,7 @@
                                 <span class="milestone-title">1. בדיקת תקינות המכשיר</span>
                                 <span class="milestone-badge badge-pending">ממתין</span>
                             </div>
-                            <div class="milestone-caption">אימות שאין מנהל מכשיר קיים ובדיקת חיבור תקין</div>
+                            <div class="milestone-caption">אימות שאין מנהל מכשיר קיים / או בעיות אחרות</div>
                         </div>
                     </div>
 
@@ -326,7 +369,7 @@
                         </div>
                         <div class="milestone-content">
                             <div class="milestone-title-row">
-                                <span class="milestone-title">3. העברת הקובץ לטלפון</span>
+                                <span class="milestone-title">3. העברת הקובץ למכשיר</span>
                                 <span class="milestone-badge badge-pending">ממתין</span>
                             </div>
                             <div class="milestone-caption">העברת קובץ ההתקנה ישירות לזיכרון המכשיר</div>
@@ -346,7 +389,7 @@
                                 <span class="milestone-title">4. התקנת A-Bloq במכשיר</span>
                                 <span class="milestone-badge badge-pending">ממתין</span>
                             </div>
-                            <div class="milestone-caption">ביצוע התקנה שקטה ברקע</div>
+                            <div class="milestone-caption">מתקין קובץ apk</div>
                         </div>
                     </div>
 
@@ -379,7 +422,7 @@
                                 <span class="milestone-title">6. הפעלת האפליקציה וסיום</span>
                                 <span class="milestone-badge badge-pending">ממתין</span>
                             </div>
-                            <div class="milestone-caption">הפעלת A-Bloq במכשיר והשלמת ההגדרה</div>
+                            <div class="milestone-caption">הפעלת A-Bloq במכשיר והשלמת ההתקנה</div>
                         </div>
                     </div>
                 </div>
@@ -396,7 +439,8 @@
                         </div>
                     </div>
                     <div id="install-error-actions" class="install-error-actions">
-                        <button id="btn-err-back-accounts" class="btn btn-tonal" style="display: none;" onclick="navigateTo('page-accounts', 2)">
+                        <button id="btn-err-back-accounts" class="btn btn-tonal" style="display: none;"
+                            onclick="navigateTo('page-accounts', 2)">
                             <span class="material-symbols-rounded">arrow_forward</span> חזור למסך חשבונות
                         </button>
                         <button id="btn-err-retry" class="btn" onclick="runInstallation()">
@@ -411,30 +455,43 @@
                         <span class="material-symbols-rounded" style="color: #FFB4AB; font-size: 24px;">info</span>
                         <div><strong>זוהתה בעיית סינון רשת (נטפרי / ISP):</strong> הורדת קובץ ההתקנה נחסמה בדפדפן.</div>
                     </div>
-                    <p style="font-size: 0.88rem; margin-bottom: 12px; color: var(--md-sys-color-on-surface-variant, #ccc);">
+                    <p
+                        style="font-size: 0.88rem; margin-bottom: 12px; color: var(--md-sys-color-on-surface-variant, #ccc);">
                         באפשרותך להוריד את הקובץ ישירות בדפדפן דרך אחד מקישורי הגיבוי הבאים, ולאחר מכן לבחור אותו:
                     </p>
                     <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px;">
-                        <a href="https://rawcdn.githack.com/cfopuser/a-bloq-installer/main/apk/normal.apk" target="_blank" class="btn btn-tonal" style="text-decoration: none; height: 36px; font-size: 0.85rem; padding: 0 12px;">
-                            <span class="material-symbols-rounded" style="font-size: 18px;">cloud_download</span> הורדה ישירה (GitHack CDN)
+                        <a href="https://rawcdn.githack.com/cfopuser/a-bloq-installer/main/apk/normal.apk"
+                            target="_blank" class="btn btn-tonal"
+                            style="text-decoration: none; height: 36px; font-size: 0.85rem; padding: 0 12px;">
+                            <span class="material-symbols-rounded" style="font-size: 18px;">cloud_download</span> הורדה
+                            ישירה (GitHack CDN)
                         </a>
-                        <a href="https://cdn.jsdelivr.net/gh/cfopuser/a-bloq-installer@main/apk/normal.apk" target="_blank" class="btn btn-tonal" style="text-decoration: none; height: 36px; font-size: 0.85rem; padding: 0 12px;">
-                            <span class="material-symbols-rounded" style="font-size: 18px;">download</span> הורדה ישירה (jsDelivr)
+                        <a href="https://cdn.jsdelivr.net/gh/cfopuser/a-bloq-installer@main/apk/normal.apk"
+                            target="_blank" class="btn btn-tonal"
+                            style="text-decoration: none; height: 36px; font-size: 0.85rem; padding: 0 12px;">
+                            <span class="material-symbols-rounded" style="font-size: 18px;">download</span> הורדה ישירה
+                            (jsDelivr)
                         </a>
-                        <a href="https://github.com/another-weird-dude/SecureGuardMDM/releases/latest" target="_blank" class="btn btn-tonal" style="text-decoration: none; height: 36px; font-size: 0.85rem; padding: 0 12px;">
-                            <span class="material-symbols-rounded" style="font-size: 18px;">open_in_new</span> דף שחרורים (GitHub)
+                        <a href="https://github.com/another-weird-dude/SecureGuardMDM/releases/latest" target="_blank"
+                            class="btn btn-tonal"
+                            style="text-decoration: none; height: 36px; font-size: 0.85rem; padding: 0 12px;">
+                            <span class="material-symbols-rounded" style="font-size: 18px;">open_in_new</span> דף
+                            שחרורים (GitHub)
                         </a>
                     </div>
-                    <label class="btn" style="cursor: pointer; height: 40px; font-size: 0.9rem; width: 100%; justify-content: center;">
+                    <label class="btn"
+                        style="cursor: pointer; height: 40px; font-size: 0.9rem; width: 100%; justify-content: center;">
                         <span class="material-symbols-rounded">file_open</span> בחר קובץ APK שהורדת
-                        <input type="file" id="manual-apk-input" accept=".apk" style="display: none;" onchange="handleManualApkSelect(this)">
+                        <input type="file" id="manual-apk-input" accept=".apk" style="display: none;"
+                            onchange="handleManualApkSelect(this)">
                     </label>
                 </div>
 
                 <div class="action-area">
                     <div style="flex: 1;"></div>
-                    
-                    <button id="btn-new-device" class="btn" onclick="startNewDeviceInstall()" style="display: none;" disabled>
+
+                    <button id="btn-new-device" class="btn" onclick="startNewDeviceInstall()" style="display: none;"
+                        disabled>
                         <span class="material-symbols-rounded">restart_alt</span> התקן על מכשיר נוסף
                     </button>
                     <button id="btn-install-start" style="display: none;" onclick="runInstallation()"></button>
@@ -451,7 +508,8 @@
                 <span>•</span>
                 <a href="https://mitmachim.top/user/cfopuser" target="_blank">נוצר על ידי cfopuser@</a>
                 <span>•</span>
-                <a href="https://mitmachim.top/topic/93248/%D7%A9%D7%99%D7%AA%D7%95%D7%A3-%D7%90%D7%AA%D7%A8-%D7%9C%D7%94%D7%AA%D7%A7%D7%A0%D7%AA-a-bloq" target="_blank">נושא</a>
+                <a href="https://mitmachim.top/topic/93248/%D7%A9%D7%99%D7%AA%D7%95%D7%A3-%D7%90%D7%AA%D7%A8-%D7%9C%D7%94%D7%AA%D7%A7%D7%A0%D7%AA-a-bloq"
+                    target="_blank">נושא</a>
             </footer>
         </div>
 
@@ -475,7 +533,7 @@
 
                 <!-- Video Element -->
                 <video id="guide-video" src="Videos/enable-adb.mp4" loop muted playsinline preload="auto"></video>
-                
+
                 <!-- In-Frame Floating Play/Pause Indicator (Brief ripple animation on click) -->
                 <div class="phone-video-overlay" id="phone-video-overlay">
                     <span class="material-symbols-rounded" id="phone-overlay-icon">play_arrow</span>
@@ -489,7 +547,8 @@
                         <img src="images/a-bloq-logo.png" alt="A-Bloq" class="phone-install-logo">
                     </div>
                     <div class="phone-install-state-title" id="phone-install-step-title">מתקין את A-Bloq...</div>
-                    <div class="phone-install-state-desc" id="phone-install-step-desc">מעביר קבצים ומגדיר הרשאות מערכת</div>
+                    <div class="phone-install-state-desc" id="phone-install-step-desc">מעביר קבצים ומגדיר הרשאות מערכת
+                    </div>
                     <div class="phone-install-progress-bar">
                         <div class="phone-install-progress-fill" id="phone-install-progress-fill"></div>
                     </div>
@@ -507,20 +566,23 @@
                     <div class="phone-success-subtext">ההתקנה הושלמה בהצלחה</div>
                 </div>
             </div>
-            
+
             <!-- Phone Footer / Controls -->
             <div class="phone-panel-footer" id="phone-panel-footer">
                 <div class="phone-controls" id="phone-controls">
-                    <button class="phone-ctrl-btn" id="btn-video-play-pause" onclick="toggleVideo()" title="הפעל / השהה">
+                    <button class="phone-ctrl-btn" id="btn-video-play-pause" onclick="toggleVideo()"
+                        title="הפעל / השהה">
                         <span class="material-symbols-rounded" id="video-icon">play_arrow</span>
                     </button>
-                    <button class="phone-ctrl-btn phone-ctrl-secondary" id="btn-video-replay" onclick="replayVideo()" title="נגן מהתחלה">
+                    <button class="phone-ctrl-btn phone-ctrl-secondary" id="btn-video-replay" onclick="replayVideo()"
+                        title="נגן מהתחלה">
                         <span class="material-symbols-rounded">replay</span>
                     </button>
                 </div>
                 <div class="phone-info-card" id="phone-info-card">
                     <span class="material-symbols-rounded phone-info-icon">info</span>
-                    <p id="video-info-text" class="phone-info-text">ייתכנו שינויים קלים במיקום ההגדרות בין דגמים שונים</p>
+                    <p id="video-info-text" class="phone-info-text">ייתכנו שינויים קלים במיקום ההגדרות בין דגמים שונים
+                    </p>
                 </div>
             </div>
         </div>
@@ -542,12 +604,14 @@
             </div>
             <div class="modal-body">
                 <p class="modal-lead">
-                    מצב זה מאפשר להגדיר את A-Bloq מבלי למחוק את החשבונות שלכם. שירותי האימות של החשבונות יושבתו באופן זמני בלבד דרך פקודות ADB, וישוחזרו אוטומטית בסיום ההתקנה.
+                    מצב זה מאפשר להגדיר את A-Bloq מבלי למחוק את החשבונות שלכם. שירותי האימות של החשבונות יושבתו באופן
+                    זמני בלבד דרך פקודות ADB, וישוחזרו אוטומטית בסיום ההתקנה.
                 </p>
                 <div class="modal-alert-box">
                     <span class="material-symbols-rounded">security</span>
                     <div>
-                        <strong>הנתונים שלכם שמורים:</strong> הסיסמאות, הקבצים וההודעות יישארו במכשיר. לא מתבצעת מחיקת מידע.
+                        <strong>הנתונים שלכם שמורים:</strong> הסיסמאות, הקבצים וההודעות יישארו במכשיר. לא מתבצעת מחיקת
+                        מידע.
                     </div>
                 </div>
 
@@ -557,9 +621,10 @@
                         <span class="spin-icon material-symbols-rounded">sync</span> מכין רשימת רכיבים...
                     </div>
                 </div>
-                
+
                 <div class="modal-disclaimer">
-                    <span class="material-symbols-rounded disclaimer-icon">info</span> במקרים נדירים, אפליקציות מסוימות עלולות להציג הודעת שגיאה זמנית עד לשחזור בסיום התהליך.
+                    <span class="material-symbols-rounded disclaimer-icon">info</span> במקרים נדירים, אפליקציות מסוימות
+                    עלולות להציג הודעת שגיאה זמנית עד לשחזור בסיום התהליך.
                 </div>
             </div>
             <div class="modal-footer">
@@ -586,7 +651,8 @@
             </div>
             <div class="modal-body">
                 <p class="modal-lead">
-                    בגרסאות אנדרואיד 14 ומעלה (SDK 34+), גוגל חסמה לחלוטין את היכולת להשבית רכיבי מערכת וחשבונות דרך ADB.
+                    בגרסאות אנדרואיד 14 ומעלה (SDK 34+), גוגל חסמה לחלוטין את היכולת להשבית רכיבי מערכת וחשבונות דרך
+                    ADB.
                 </p>
                 <div class="modal-instruction-card">
                     <h4>כיצד להסיר את החשבונות כעת:</h4>
@@ -598,7 +664,8 @@
                     </ol>
                 </div>
                 <p class="text-subtle">
-                    <span class="material-symbols-rounded tip-icon">lightbulb</span> ניתן לחבר מחדש את כל החשבונות מיד לאחר סיום ההתקנה בהצלחה.
+                    <span class="material-symbols-rounded tip-icon">lightbulb</span> ניתן לחבר מחדש את כל החשבונות מיד
+                    לאחר סיום ההתקנה בהצלחה.
                 </p>
             </div>
             <div class="modal-footer">
@@ -640,7 +707,8 @@
 
                 <div class="modal-reassurance-card">
                     <span class="material-symbols-rounded">verified_user</span>
-                    <span><strong>המידע שלכם מוגן:</strong> החשבונות והנתונים לא נמחקים. הם יופעלו מחדש אוטומטית מיד עם סיום ההתקנה.</span>
+                    <span><strong>המידע שלכם מוגן:</strong> החשבונות והנתונים לא נמחקים. הם יופעלו מחדש אוטומטית מיד עם
+                        סיום ההתקנה.</span>
                 </div>
             </div>
         </div>
@@ -671,7 +739,7 @@
                     </button>
                 </div>
             </div>
-            
+
             <div class="console-status-bar">
                 <div class="console-status-indicator">
                     <span class="status-live-dot"></span>
@@ -685,12 +753,14 @@
             <div class="console-body">
                 <div class="terminal-log-viewer" id="install-log"></div>
             </div>
-            
+
             <div class="console-modal-footer">
                 <span class="console-footer-note">
-                    <span class="material-symbols-rounded">info</span> מעקב שקוף אחר פקודות ADB, תהליכי התקנה ושגיאות מערכת בזמן אמת.
+                    <span class="material-symbols-rounded">info</span> מעקב שקוף אחר פקודות ADB, תהליכי התקנה ושגיאות
+                    מערכת בזמן אמת.
                 </span>
-                <button class="btn btn-tonal" type="button" onclick="closeConsoleModal()" style="height: 36px; padding: 0 20px;">סגור</button>
+                <button class="btn btn-tonal" type="button" onclick="closeConsoleModal()"
+                    style="height: 36px; padding: 0 20px;">סגור</button>
             </div>
         </div>
     </div>
@@ -698,7 +768,7 @@
     <!-- Snackbar for Notifications -->
     <div id="snackbar"></div>
 
-    <script src="js/webadb.js"></script> 
+    <script src="js/webadb.js"></script>
     <script type="module" src="js/main.js"></script>
 
     <script>
@@ -710,4 +780,5 @@
     <script data-goatcounter="https://cfopuser.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 
 </body>
+
 </html>
