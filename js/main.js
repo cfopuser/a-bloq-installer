@@ -1,8 +1,26 @@
 // js/main.js
-import { navigateTo, toggleVideo, log, showToast, copyLogToClipboard } from './ui.js';
+import { 
+    navigateTo, 
+    toggleVideo, 
+    replayVideo, 
+    handlePhoneFrameClick, 
+    updatePhoneGuide, 
+    updatePlayIcon, 
+    log, 
+    showToast, 
+    copyLogToClipboard, 
+    initStepper, 
+    openConsoleModal, 
+    closeConsoleModal, 
+    clearConsoleLog, 
+    startNewDeviceInstall,
+    initTheme,
+    toggleTheme,
+    setTheme
+} from './ui.js';
 import { connectAdb } from './adb-client.js';
 import { checkAccounts, runAccountBypass, restoreAccounts, getBypassPreview } from './accounts.js';
-import { checkForUpdates, startDownload, runInstallation, setManualApkFile } from './installer.js';
+import { checkForUpdates, startDownload, runInstallation, setManualApkFile, resetApkBlob } from './installer.js';
 import { appState, restoreSessionState } from './state.js';
 
 // --- Rescue Banner Management ---
@@ -11,8 +29,12 @@ export function updateRescueBanner() {
     const titleEl = document.getElementById('rescue-banner-title');
     const descEl = document.getElementById('rescue-banner-desc');
     
+    // Check which page is currently active
+    const activePage = document.querySelector('.page.active')?.id;
+    const isApplicablePage = !activePage || activePage === 'page-adb' || activePage === 'page-accounts';
+
     const count = appState.disabledPackages ? appState.disabledPackages.length : 0;
-    if (count > 0 && banner) {
+    if (count > 0 && banner && isApplicablePage) {
         banner.style.display = 'flex';
         if (titleEl) titleEl.textContent = `זוהו ${count} רכיבי מערכת מושבתים במכשיר`;
         if (descEl) descEl.textContent = `נמצאו חבילות שהושבתו זמנית (${appState.disabledPackages.join(', ')}). ניתן לשחזרן בלחיצת כפתור.`;
@@ -68,6 +90,10 @@ window.closeAndroid14Modal = () => {
     if (modal) modal.classList.remove('active');
 };
 
+window.openConsoleModal = openConsoleModal;
+window.closeConsoleModal = closeConsoleModal;
+window.clearConsoleLog = clearConsoleLog;
+
 window.handleBypassTriggerClick = () => {
     // Android 14+ (SDK >= 34) constraint
     if ((appState.sdkVersion || 0) >= 34) {
@@ -104,6 +130,8 @@ window.navigateTo = (pageId, stepIndex) => {
     updateRescueBanner();
 };
 window.toggleVideo = toggleVideo;
+window.replayVideo = replayVideo;
+window.handlePhoneFrameClick = handlePhoneFrameClick;
 window.connectAdb = async () => {
     await connectAdb();
     updateRescueBanner();
@@ -113,14 +141,32 @@ window.runAccountBypass = runAccountBypass;
 window.startDownload = startDownload;
 window.runInstallation = runInstallation;
 window.copyLogToClipboard = copyLogToClipboard;
+window.startNewDeviceInstall = startNewDeviceInstall;
+window.resetApkBlob = resetApkBlob;
+window.toggleTheme = toggleTheme;
+window.setTheme = setTheme;
 window.handleManualApkSelect = (input) => {
     if (input && input.files && input.files[0]) {
         setManualApkFile(input.files[0]);
     }
 };
 
+// Immediate Theme Initialization (prevents flash of wrong theme)
+initTheme();
+
 // 2. INITIALIZE & EVENT LISTENERS
 document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
+    initStepper();
+
+    // Setup Video Listeners for immediate icon sync
+    const video = document.getElementById('guide-video');
+    if (video) {
+        video.addEventListener('play', () => updatePlayIcon(true));
+        video.addEventListener('pause', () => updatePlayIcon(false));
+        video.addEventListener('ended', () => updatePlayIcon(false));
+    }
+
     // Check Browser
     if (!('usb' in navigator)) {
         document.getElementById('page-main-content').style.display = 'none';
@@ -139,6 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Escape') {
             window.closeBypassModal();
             window.closeAndroid14Modal();
+            window.closeConsoleModal();
         }
     });
 });

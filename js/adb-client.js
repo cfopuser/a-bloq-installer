@@ -54,20 +54,27 @@ async function checkDeviceIntegrity() {
         const cmd = "test -e /system/bin/su && echo ROOT_FOUND || test -e /system/xbin/su && echo ROOT_FOUND || test -e /sbin/su && echo ROOT_FOUND";
         const rootOut = await executeAdbCommand(cmd, "Root Check", true);
         if (rootOut.includes("ROOT_FOUND")) {
-            log("אזהרה קריטית: זוהה מכשיר עם ROOT.", 'error');
-            alert("אזהרה: המכשיר מזוהה כ-בעל Root.");
+            log("אזהרה קריטית: זוהה מכשיר עם ROOT (הרשאות שורש).", 'warn');
+            showToast("אזהרה: המכשיר מזוהה כבעל Root");
         }
     } catch (e) { console.log("Root check skipped or clean"); }
 }
 
 export async function executeAdbCommand(command, description, silent = false) {
     if (!appState.adbInstance) throw new Error("ADB Not Connected");
-    if (!silent) log(`> ${description}...`, 'info');
+    if (!silent) {
+        log(`$ adb shell ${command}`, 'cmd');
+    }
     
     try {
         const shell = await appState.adbInstance.shell(command);
         const response = await readAll(shell);
+        const trimmed = response.trim();
         const lowerRes = response.toLowerCase();
+
+        if (!silent && trimmed) {
+            log(trimmed, 'stdout');
+        }
 
         // Error Parsing
         for (const [key, hebrewMsg] of Object.entries(ADB_ERRORS)) {
@@ -77,10 +84,10 @@ export async function executeAdbCommand(command, description, silent = false) {
             throw new Error("נכשלה הפעולה: " + response);
         }
 
-        if (!silent) log(` הצלחה: ${description}`, 'success');
+        if (!silent) log(`הושלם בהצלחה: ${description}`, 'success');
         return response;
     } catch (e) {
-        if (!silent) log(` שגיאה ב${description}: ${e.message}`, 'error');
+        if (!silent) log(`שגיאה: ${e.message}`, 'error');
         throw e;
     }
 }

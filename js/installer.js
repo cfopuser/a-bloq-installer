@@ -2,7 +2,7 @@
 import { appState } from './state.js';
 import { CONFIG } from './config.js';
 import { executeAdbCommand, wait } from './adb-client.js';
-import { log, showToast, updateProgress, navigateTo } from './ui.js';
+import { log, showToast, updateProgress, navigateTo, resetMilestones, updateMilestone, setInstallHeroState, clearConsoleLog, setPhonePanelState } from './ui.js';
 import { restoreAccounts } from './accounts.js';
 
 let apkBlob = null;
@@ -260,6 +260,11 @@ async function rollbackInstallation(isApkInstalled = false) {
     }
 }
 
+export function resetApkBlob() {
+    apkBlob = null;
+    foundRelease = null;
+}
+
 /**
  * Display structured failure information and recovery actions in the UI
  */
@@ -275,16 +280,34 @@ function showInstallationFailureUI(errorMessage) {
 
     const lowerMsg = (errorMessage || '').toLowerCase();
 
-    if (lowerMsg.includes('there are already some accounts') || lowerMsg.includes('חשבונות פעילים')) {
+    if (lowerMsg.includes('there are already some accounts') || lowerMsg.includes('חשבונות פעילים') || lowerMsg.includes('accounts:')) {
         if (errorTitle) errorTitle.innerText = "נמצאו חשבונות פעילים במכשיר";
         if (errorDesc) {
-            errorDesc.innerHTML = `הגדרת מנהל המכשיר (Device Owner) נכשלה מכיוון שקיימים חשבונות פעילים (כגון Google, Samsung, וואטסאפ או רשתות חברתיות).<br><strong>יש להסיר את כל החשבונות בהגדרות המכשיר ולאחר מכן לנסות שוב.</strong>`;
+            errorDesc.innerHTML = `הגדרת הניהול נכשלה כי קיימים במכשיר חשבונות פעילים (כגון גוגל, סמסונג, וואטסאפ או רשתות חברתיות).<br><strong>יש להסיר את כל החשבונות בהגדרות המכשיר ולאחר מכן לנסות שוב.</strong>`;
         }
         if (btnBackAcc) btnBackAcc.style.display = 'inline-flex';
-    } else if (lowerMsg.includes('already a device owner') || lowerMsg.includes('קיים מנהל מכשיר')) {
-        if (errorTitle) errorTitle.innerText = "קיים מנהל מכשיר אחר";
+    } else if (lowerMsg.includes('already a device owner') || lowerMsg.includes('קיים מנהל מכשיר') || lowerMsg.includes('trying to set the device owner')) {
+        if (errorTitle) errorTitle.innerText = "קיים כבר מנהל מכשיר";
         if (errorDesc) {
-            errorDesc.innerHTML = `המכשיר כבר מנוהל על ידי אפליקציה אחרת. אנדרואיד מאפשרת מנהל מכשיר אחד בלבד.<br><strong>נדרש לבצע איפוס יצרן (Factory Reset) למכשיר על מנת להגדירו מחדש.</strong>`;
+            errorDesc.innerHTML = `המכשיר כבר מנוהל על ידי אפליקציה אחרת.<br><strong>נדרש לבצע איפוס יצרן (Factory Reset) למכשיר על מנת להגדירו מחדש.</strong>`;
+        }
+        if (btnBackAcc) btnBackAcc.style.display = 'none';
+    } else if (lowerMsg.includes('insufficient_storage') || lowerMsg.includes('מקום פנוי')) {
+        if (errorTitle) errorTitle.innerText = "אין מספיק מקום פנוי בטלפון";
+        if (errorDesc) {
+            errorDesc.innerHTML = `זיכרון האחסון במכשיר מלא.<br><strong>יש לפנות שטח אחסון על ידי מחיקת קבצים או אפליקציות ולנסות שוב.</strong>`;
+        }
+        if (btnBackAcc) btnBackAcc.style.display = 'none';
+    } else if (lowerMsg.includes('update_incompatible') || lowerMsg.includes('signatures')) {
+        if (errorTitle) errorTitle.innerText = "גרסה קודמת חוסמת התקנה";
+        if (errorDesc) {
+            errorDesc.innerHTML = `קיימת במכשיר גרסה קודמת של A-Bloq בעלת חתימה שונה.<br><strong>יש להסיר את האפליקציה הקודמת ידנית מהמכשיר ולנסות שוב.</strong>`;
+        }
+        if (btnBackAcc) btnBackAcc.style.display = 'none';
+    } else if (lowerMsg.includes('unauthorized') || lowerMsg.includes('permission denied')) {
+        if (errorTitle) errorTitle.innerText = "נדרש אישור בטלפון";
+        if (errorDesc) {
+            errorDesc.innerHTML = `המכשיר לא אישר את בקשת החיבור.<br><strong>אנא הביטו במסך המכשיר, סמנו "אפשר תמיד ממחשב זה" ואשרו.</strong>`;
         }
         if (btnBackAcc) btnBackAcc.style.display = 'none';
     } else {
@@ -295,10 +318,23 @@ function showInstallationFailureUI(errorMessage) {
 }
 
 export async function runInstallation() {
-    if (!appState.adbConnected) return showToast("ADB אינו מחובר");
+    if (!appState.adbConnected) return showToast("המכשיר אינו מחובר");
     const btn = document.getElementById('btn-install-start');
-    btn.disabled = true;
-    updateProgress(0);
+    if (btn) btn.disabled = true;
+
+    const btnNewDevice = document.getElementById('btn-new-device');
+    if (btnNewDevice) {
+        btnNewDevice.style.display = 'none';
+        btnNewDevice.disabled = true;
+    }
+
+    // Clean console and state on every fresh flash
+    clearConsoleLog();
+    resetMilestones();
+    updateMilestone(1, 'active');
+    setInstallHeroState('running', "מתחיל בדיקות מקדימות...", "בודק תקינות חיבור ומנהל מכשיר", 5);
+    setPhonePanelState('installing', { title: "מתחיל בדיקות מקדימות...", desc: "בודק תקינות חיבור ומנהל מכשיר", progress: 0.05 });
+    updateProgress(0.05);
 
     const manualBox = document.getElementById('manual-apk-box');
     if (manualBox) manualBox.style.display = 'none';
@@ -306,90 +342,133 @@ export async function runInstallation() {
     const errorBox = document.getElementById('install-error-box');
     if (errorBox) errorBox.style.display = 'none';
 
-    const successMsg = document.getElementById('phone-success-message');
-    if (successMsg) successMsg.style.display = 'none';
-
     let isApkInstalled = false;
+    let currentPhase = 1;
 
     try {
         // 1. Pre-checks: Check current device owner
+        currentPhase = 1;
         log("בודק מנהל מכשיר קיים...", 'info');
-        const owner = await executeAdbCommand("dumpsys device_policy", "Check Owner", true);
+        const owner = await executeAdbCommand("dumpsys device_policy", "בדיקת מנהל מכשיר קיים", true);
         if (owner.includes("ComponentInfo") && !owner.includes(CONFIG.TARGET_PACKAGE)) {
-            throw new Error("קיים מנהל מכשיר (Device Owner) אחר על המכשיר. יש לבצע איפוס יצרן.");
+            throw new Error("קיים מנהל מכשיר אחר על המכשיר. יש לבצע איפוס יצרן.");
         }
+        updateMilestone(1, 'done');
         
-        // 2. Load APK (0% - 35%)
+        // 2. Load APK (10% - 35%)
+        currentPhase = 2;
+        updateMilestone(2, 'active');
+        setInstallHeroState('running', "מוריד את קובץ ההתקנה...", "טוען ומאמת את חבילת ההתקנה", 15);
+        
         if (!apkBlob) {
             log("מתחיל בטעינת קובץ ההתקנה...", 'info');
             let lastReportedPercent = -1;
             await fetchApkBlobWithFallbacks((received, total, sourceName) => {
                 if (total > 0) {
                     const ratio = received / total;
-                    updateProgress(ratio * 0.35);
+                    const overallProgress = 0.10 + ratio * 0.25;
+                    updateProgress(overallProgress);
                     const percent = Math.round(ratio * 100);
+                    setInstallHeroState('running', `מוריד קובץ מ-${sourceName}...`, `${formatBytes(received)} / ${formatBytes(total)} (${percent}%)`, overallProgress * 100);
                     if (percent % 25 === 0 && percent !== lastReportedPercent) {
                         lastReportedPercent = percent;
-                        log(`מוריד מ-${sourceName}: ${formatBytes(received)} / ${formatBytes(total)} (${percent}%)`, 'info');
+                        log(`מוריד: ${formatBytes(received)} / ${formatBytes(total)} (${percent}%)`, 'info');
                     }
                 } else {
-                    updateProgress(0.15);
+                    updateProgress(0.20);
                 }
             });
         }
 
+        updateMilestone(2, 'done');
         updateProgress(0.35);
 
         // 3. Push APK to Device (35% - 65%)
+        currentPhase = 3;
+        updateMilestone(3, 'active');
+        setInstallHeroState('running', "מעביר את הקובץ לטלפון...", "מעביר את קובץ ההתקנה אל המכשיר", 35);
         log("מעביר קובץ התקנה למכשיר...", 'info');
+        
         const sync = await appState.adbInstance.sync();
         const file = new File([apkBlob], "app.apk");
         await sync.push(file, "/data/local/tmp/app.apk", 0o644, (s, t) => {
             if (t > 0) {
-                updateProgress(0.35 + (s / t) * 0.30);
+                const ratio = s / t;
+                const overallProgress = 0.35 + ratio * 0.30;
+                updateProgress(overallProgress);
+                setInstallHeroState('running', "מעביר קובץ לטלפון...", `${formatBytes(s)} / ${formatBytes(t)} (${Math.round(ratio * 100)}%)`, overallProgress * 100);
             }
         });
         await sync.quit();
         
+        updateMilestone(3, 'done');
         await wait(1000);
 
         // 4. Install APK (65% - 80%)
+        currentPhase = 4;
+        updateMilestone(4, 'active');
+        setInstallHeroState('running', "מתקין את A-Bloq במכשיר...", "מבצע התקנה שקטה ברקע", 65);
         updateProgress(0.65);
-        log("מתקין אפליקציה במכשיר...", 'info');
-        await executeAdbCommand(`pm install -r -g "/data/local/tmp/app.apk"`, "Install APK");
+        
+        log("מתקין את A-Bloq במכשיר...", 'info');
+        await executeAdbCommand(`pm install -r -g "/data/local/tmp/app.apk"`, "התקנת אפליקציה");
         isApkInstalled = true;
         
+        updateMilestone(4, 'done');
         await wait(1500);
 
-        // 5. Set Device Owner (80% - 90%)
+        // 5. Set Device Owner & Grant Permissions (80% - 95%)
+        currentPhase = 5;
+        updateMilestone(5, 'active');
+        setInstallHeroState('running', "מגדיר ניהול ראשי והרשאות...", "מפעיל הרשאות ניהול מאובטחות במערכת", 80);
         updateProgress(0.80);
-        log("מגדיר הרשאות ניהול (Device Owner)...", 'info');
-        await executeAdbCommand(`dpm set-device-owner ${CONFIG.TARGET_PACKAGE}/${CONFIG.DEVICE_ADMIN}`, "Set Owner");
         
-        // 6. Grant Secure Settings (90% - 95%)
+        log("מגדיר ניהול מכשיר...", 'info');
+        await executeAdbCommand(`dpm set-device-owner ${CONFIG.TARGET_PACKAGE}/${CONFIG.DEVICE_ADMIN}`, "הגדרת מנהל מכשיר");
+        
         updateProgress(0.90);
         log("מעניק הרשאות מערכת...", 'info');
-        await executeAdbCommand(`pm grant ${CONFIG.TARGET_PACKAGE} android.permission.WRITE_SECURE_SETTINGS`, "Grant Secure Settings");
-        
-        // 7. Launch App (95% - 100%)
-        updateProgress(0.95);
-        log("מפעיל את האפליקציה...", 'info');
-        await executeAdbCommand(`am start -n ${CONFIG.TARGET_PACKAGE}/.MainActivity`, "Launch");
+        await executeAdbCommand(`pm grant ${CONFIG.TARGET_PACKAGE} android.permission.WRITE_SECURE_SETTINGS`, "הרשאות מערכת");
+        updateMilestone(5, 'done');
 
+        // 6. Launch App (95% - 100%)
+        currentPhase = 6;
+        updateMilestone(6, 'active');
+        setInstallHeroState('running', "מפעיל את האפליקציה...", "פותח את A-Bloq במכשיר ומשלים את ההתקנה", 95);
+        updateProgress(0.95);
+        
+        log("מפעיל את האפליקציה...", 'info');
+        await executeAdbCommand(`am start -n ${CONFIG.TARGET_PACKAGE}/.MainActivity`, "הפעלת אפליקציה");
+
+        updateMilestone(6, 'done');
         updateProgress(1.0);
+        setInstallHeroState('success', "ההתקנה וההגדרה הושלמו בהצלחה!", "A-Bloq הוגדר כמנהל המכשיר ומוכן לשימוש.", 100);
         log("ההתקנה וההגדרה הושלמו בהצלחה!", 'success');
         showToast("ההתקנה הסתיימה בהצלחה!");
 
+        // Show and enable "Install on another device" button only on success
+        if (btnNewDevice) {
+            btnNewDevice.style.display = 'inline-flex';
+            btnNewDevice.disabled = false;
+        }
+
         // Show Success Screen on phone frame
-        const video = document.getElementById('guide-video');
-        const phoneControls = document.querySelector('.phone-controls');
-        if (video) video.style.display = 'none';
-        if (phoneControls) phoneControls.style.display = 'none';
-        if (successMsg) successMsg.style.display = 'flex';
+        setPhonePanelState('success');
 
     } catch (e) {
         log(`שגיאה בתהליך: ${e.message}`, 'error');
         showToast("ההתקנה נכשלה");
+
+        if (btnNewDevice) {
+            btnNewDevice.style.display = 'none';
+            btnNewDevice.disabled = true;
+        }
+
+        if (currentPhase >= 1 && currentPhase <= 6) {
+            updateMilestone(currentPhase, 'error');
+        }
+        setInstallHeroState('error', "ההתקנה נכשלה", e.message || "חלה תקלה במהלך תהליך ההתקנה.", undefined);
+        setPhonePanelState('error', { desc: e.message || "חלה תקלה במהלך תהליך ההתקנה." });
 
         // Rollback unmanaged state & restore disabled packages
         await rollbackInstallation(isApkInstalled);
@@ -397,8 +476,9 @@ export async function runInstallation() {
         // Display guided failure feedback
         showInstallationFailureUI(e.message);
 
-        // If APK retrieval failed, display the manual fallback file selector
-        if (!apkBlob && manualBox) {
+        // Only display the manual fallback file selector if APK retrieval itself failed
+        const isApkError = e.message.includes('APK') || e.message.includes('קובץ') || e.message.includes('הורד') || e.message.includes('רשת');
+        if (!apkBlob && isApkError && manualBox) {
             manualBox.style.display = 'block';
         }
     } finally {
@@ -406,6 +486,7 @@ export async function runInstallation() {
         if (appState.disabledPackages.length > 0) {
             await restoreAccounts();
         }
-        btn.disabled = false;
+        if (btn) btn.disabled = false;
     }
 }
+
