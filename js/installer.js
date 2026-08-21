@@ -352,6 +352,12 @@ function showInstallationFailureUI(errorMessage) {
             errorDesc.innerHTML = `המכשיר לא הגיב בזמן לפקודת ההתקנה.<br><strong>ודאו שהמכשיר דולק והמסך אינו נעול, ולחצו 'נסה שוב'.</strong>`;
         }
         if (btnBackAcc) btnBackAcc.style.display = 'none';
+    } else if (lowerMsg.includes('unknown admin') || lowerMsg.includes('רכיב הניהול לא זוהה') || lowerMsg.includes('unknown_admin')) {
+        if (errorTitle) errorTitle.innerText = "רכיב הניהול טרם זוהה במערכת";
+        if (errorDesc) {
+            errorDesc.innerHTML = `רכיב ניהול המכשיר (Device Admin) טרם נרשם במערכת Android או שגרסת המערכת חסמה את הפעלתו.<br><strong>אנא הפעילו מחדש (Restart) את המכשיר ונסו שוב.</strong>`;
+        }
+        if (btnBackAcc) btnBackAcc.style.display = 'none';
     } else {
         if (errorTitle) {
             errorTitle.textContent = "שגיאה במהלך ההתקנה";
@@ -364,6 +370,63 @@ function showInstallationFailureUI(errorMessage) {
         }
         if (btnBackAcc) btnBackAcc.style.display = 'none';
     }
+}
+
+/**
+ * Resiliently set device owner with component discovery, format variations, and registration retry
+ */
+export async function setDeviceOwnerWithRetry(pkg = CONFIG.TARGET_PACKAGE, admin = CONFIG.DEVICE_ADMIN) {
+    log("מגדיר ניהול מכשיר...", 'info');
+    
+    // Normalize admin component names
+    const shortAdmin = admin.startsWith('.') ? admin : `.${admin}`;
+    const fullAdminClass = admin.startsWith('.') ? `${pkg}${admin}` : admin;
+    
+    const candidateCommands = [
+        `dpm set-device-owner ${pkg}/${shortAdmin}`,
+        `dpm set-device-owner --user 0 ${pkg}/${shortAdmin}`,
+        `dpm set-device-owner ${pkg}/${fullAdminClass}`,
+        `dpm set-device-owner --user 0 ${pkg}/${fullAdminClass}`,
+        `dpm set-device-owner --user current ${pkg}/${shortAdmin}`
+    ];
+
+    const maxAttempts = 6;
+    let lastError = null;
+
+    // Stabilization pause to let PackageManager finish component indexing
+    await wait(1500);
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        // Try candidate command formats
+        for (const cmd of candidateCommands) {
+            try {
+                const res = await executeAdbCommand(cmd, "הגדרת מנהל מכשיר", true);
+                if (res.toLowerCase().includes("success") || res.includes("set to package") || res.includes("device owner set")) {
+                    log("מנהל המכשיר הוגדר בהצלחה!", 'success');
+                    return true;
+                }
+            } catch (err) {
+                lastError = err;
+                const errLower = (err.message || '').toLowerCase();
+                
+                // If it failed because of active accounts or already device owner, abort immediately
+                if (errLower.includes('already some accounts') || errLower.includes('already a device owner') || errLower.includes('trying to set')) {
+                    throw err;
+                }
+                // If unknown admin, component might still be registering in background
+                if (errLower.includes('unknown admin') || errLower.includes('illegalargumentexception')) {
+                    continue;
+                }
+            }
+        }
+
+        if (attempt < maxAttempts) {
+            log(`ממתין להשלמת רישום רכיב הניהול במערכת (ניסיון ${attempt}/${maxAttempts})...`, 'info');
+            await wait(2000);
+        }
+    }
+
+    throw lastError || new Error(`הגדרת מנהל המכשיר נכשלה: רכיב הניהול (${pkg}/${shortAdmin}) לא זוהה על ידי המערכת.`);
 }
 
 /**
@@ -531,8 +594,7 @@ export async function runInstallation() {
         setInstallHeroState('running', "מגדיר ניהול ראשי והרשאות...", "מפעיל הרשאות ניהול מאובטחות במערכת", 80);
         updateProgress(0.80);
 
-        log("מגדיר ניהול מכשיר...", 'info');
-        await executeAdbCommand(`dpm set-device-owner ${CONFIG.TARGET_PACKAGE}/${CONFIG.DEVICE_ADMIN}`, "הגדרת מנהל מכשיר");
+        await setDeviceOwnerWithRetry(CONFIG.TARGET_PACKAGE, CONFIG.DEVICE_ADMIN);
 
         // Anti-Quiet-Failure: Deep verify device owner status
         log("מאמת הגדרת מנהל מכשיר...", 'info');
