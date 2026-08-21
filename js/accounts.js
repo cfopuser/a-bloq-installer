@@ -291,14 +291,40 @@ export function getAccountVisuals(type) {
 // --- Dynamic Parser Helpers ---
 
 /**
- * Fetch account dump output from dumpsys account
+ * Fetch account dump output from dumpsys account with integrity verification
  */
 export async function getAccountDump() {
     let output = "";
-    try {
-        output = await executeAdbCommand("dumpsys account", "Deep Dump", true);
-    } catch (e) {
-        console.warn("dumpsys account query error:", e);
+    let attempts = 0;
+    const maxAttempts = 2;
+
+    while (attempts < maxAttempts) {
+        attempts++;
+        try {
+            output = await executeAdbCommand("dumpsys account", "בדיקת חשבונות מעמיקה (dumpsys account)", true);
+            
+            const trimmed = (output || "").trim();
+            const lower = trimmed.toLowerCase();
+
+            // Validate that the output is not a known system error
+            if (lower.includes("can't find service") || lower.includes("deadobjectexception") || lower.includes("service not found")) {
+                throw new Error("שירות החשבונות באנדרואיד אינו זמין (ייתכן שהמכשיר נטען או נעול)");
+            }
+
+            // If output is completely empty on connected device, retry once
+            if (!trimmed && attempts < maxAttempts) {
+                await wait(600);
+                continue;
+            }
+
+            return output;
+        } catch (e) {
+            console.warn(`dumpsys account query attempt ${attempts} error:`, e);
+            if (attempts >= maxAttempts) {
+                throw new Error(`שגיאה בקריאת חשבונות מהמכשיר: ${e.message || 'פלט ריק או שגיאת שירות'}`);
+            }
+            await wait(600);
+        }
     }
     return output;
 }
@@ -621,12 +647,32 @@ export async function checkAccounts() {
             if (listDiv) listDiv.innerHTML = html;
         }
     } catch (e) {
-        showToast("שגיאה בבדיקת החשבונות");
+        showToast("שגיאה בבדיקת החשבונות: " + (e.message || "תקלת תקשורת"));
         console.error(e);
+        updateStatusBadge('account-status', '<span class="material-symbols-rounded">error</span> שגיאה בסריקה', 'error');
+        if (nextBtn) nextBtn.disabled = true;
+        appState.accountsClean = false;
+
         if (heroStatus) heroStatus.className = 'account-hero-card error';
-        if (heroTitle) heroTitle.textContent = 'שגיאה בסריקת חשבונות';
-        if (heroDesc) heroDesc.textContent = 'וודא שהמכשיר מחובר ופתוח לניפוי באגים.';
+        if (heroTitle) heroTitle.textContent = 'שגיאה בסריקת חשבונות המערכת';
+        if (heroDesc) heroDesc.textContent = e.message || 'לא ניתן היה לאמת את החשבונות במכשיר. ודאו שהמכשיר דולק ואינו נעול, ולחצו "בדוק שוב".';
         if (heroIcon) heroIcon.textContent = 'error';
+
+        if (listDiv) {
+            listDiv.innerHTML = `
+                <div class="account-error-state" style="padding: 24px; text-align: center; background: var(--md-sys-color-surface-variant); border-radius: var(--border-radius-lg, 16px); margin-top: 10px;">
+                    <div style="color: var(--md-sys-color-error, #F28B82); font-size: 1.1rem; font-weight: 700; margin-bottom: 8px;">
+                        <span class="material-symbols-rounded" style="vertical-align: middle;">warning</span> נכשלה קריאת רשימת החשבונות
+                    </div>
+                    <div style="font-size: 0.9rem; color: var(--md-sys-color-on-surface-variant); margin-bottom: 16px;">
+                        ${e.message || 'חלה שגיאה בתקשורת ADB עם שירות החשבונות של המכשיר.'}
+                    </div>
+                    <button class="btn btn-tonal" onclick="checkAccounts()">
+                        <span class="material-symbols-rounded">refresh</span> נסה לסרוק שוב
+                    </button>
+                </div>
+            `;
+        }
     }
 }
 

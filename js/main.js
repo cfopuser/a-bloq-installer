@@ -18,7 +18,7 @@ import {
     toggleTheme,
     setTheme
 } from './ui.js';
-import { connectAdb } from './adb-client.js';
+import { connectAdb, initUsbConnectionDaemon } from './adb-client.js';
 import { checkAccounts, runAccountBypass, restoreAccounts, getBypassPreview } from './accounts.js';
 import { checkForUpdates, startDownload, runInstallation, setManualApkFile, resetApkBlob } from './installer.js';
 import { appState, restoreSessionState } from './state.js';
@@ -158,6 +158,7 @@ initTheme();
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     initStepper();
+    initUsbConnectionDaemon();
 
     // Setup Video Listeners for immediate icon sync
     const video = document.getElementById('guide-video');

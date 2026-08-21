@@ -6,7 +6,10 @@ export const appState = {
     disabledPackages: [],
     adbInstance: null,
     webUsbInstance: null,
-    sdkVersion: 0 // Track Android SDK Version
+    sdkVersion: 0, // Track Android SDK Version
+    deviceModel: "", // Track connected device model name
+    isExecutingCommand: false, // Prevent concurrent heartbeat while running intensive operations
+    lastDisconnectReason: null
 };
 
 export function saveSessionState() {

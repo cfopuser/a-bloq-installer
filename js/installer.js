@@ -340,9 +340,28 @@ function showInstallationFailureUI(errorMessage) {
             errorDesc.innerHTML = `המכשיר לא אישר את בקשת החיבור.<br><strong>אנא הביטו במסך המכשיר, סמנו "אפשר תמיד ממחשב זה" ואשרו.</strong>`;
         }
         if (btnBackAcc) btnBackAcc.style.display = 'none';
+    } else if (lowerMsg.includes('נותק') || lowerMsg.includes('disconnect') || lowerMsg.includes('not found') || lowerMsg.includes('lost') || lowerMsg.includes('offline')) {
+        if (errorTitle) errorTitle.innerText = "המכשיר נותק במהלך ההתקנה";
+        if (errorDesc) {
+            errorDesc.innerHTML = `חיבור ה-USB עם המכשיר הופסק.<br><strong>ודאו שכבל ה-USB מחובר היטב, חברו את המכשיר מחדש ולחצו 'נסה שוב'.</strong>`;
+        }
+        if (btnBackAcc) btnBackAcc.style.display = 'none';
+    } else if (lowerMsg.includes('timeout') || lowerMsg.includes('פסק זמן')) {
+        if (errorTitle) errorTitle.innerText = "פסק זמן בתקשורת עם המכשיר";
+        if (errorDesc) {
+            errorDesc.innerHTML = `המכשיר לא הגיב בזמן לפקודת ההתקנה.<br><strong>ודאו שהמכשיר דולק והמסך אינו נעול, ולחצו 'נסה שוב'.</strong>`;
+        }
+        if (btnBackAcc) btnBackAcc.style.display = 'none';
     } else {
-        if (errorTitle) errorTitle.innerText = "שגיאה במהלך ההתקנה";
-        if (errorDesc) errorDesc.innerText = errorMessage || "חלה תקלה במהלך תהליך ההתקנה וההגדרה.";
+        if (errorTitle) {
+            errorTitle.textContent = "שגיאה במהלך ההתקנה";
+            errorTitle.innerText = "שגיאה במהלך ההתקנה";
+        }
+        if (errorDesc) {
+            errorDesc.textContent = errorMessage || "חלה תקלה במהלך תהליך ההתקנה וההגדרה.";
+            errorDesc.innerHTML = errorMessage || "חלה תקלה במהלך תהליך ההתקנה וההגדרה.";
+            errorDesc.innerText = errorMessage || "חלה תקלה במהלך תהליך ההתקנה וההגדרה.";
+        }
         if (btnBackAcc) btnBackAcc.style.display = 'none';
     }
 }
@@ -419,17 +438,21 @@ export async function runInstallation() {
         setInstallHeroState('running', "מעביר את הקובץ למכשיר...", "מעביר את קובץ ההתקנה אל המכשיר", 35);
         log("מעביר קובץ התקנה למכשיר...", 'info');
 
-        const sync = await appState.adbInstance.sync();
-        const file = new File([apkBlob], "app.apk");
-        await sync.push(file, "/data/local/tmp/app.apk", 0o644, (s, t) => {
-            if (t > 0) {
-                const ratio = s / t;
-                const overallProgress = 0.35 + ratio * 0.30;
-                updateProgress(overallProgress);
-                setInstallHeroState('running', "מעביר קובץ למכשיר...", `${formatBytes(s)} / ${formatBytes(t)} (${Math.round(ratio * 100)}%)`, overallProgress * 100);
-            }
-        });
-        await sync.quit();
+        try {
+            const sync = await appState.adbInstance.sync();
+            const file = new File([apkBlob], "app.apk");
+            await sync.push(file, "/data/local/tmp/app.apk", 0o644, (s, t) => {
+                if (t > 0) {
+                    const ratio = s / t;
+                    const overallProgress = 0.35 + ratio * 0.30;
+                    updateProgress(overallProgress);
+                    setInstallHeroState('running', "מעביר קובץ למכשיר...", `${formatBytes(s)} / ${formatBytes(t)} (${Math.round(ratio * 100)}%)`, overallProgress * 100);
+                }
+            });
+            await sync.quit();
+        } catch (syncErr) {
+            throw new Error(`שגיאה בהעברת הקובץ למכשיר: ${syncErr.message || 'העברת הנתונים נפסקה'}`);
+        }
 
         updateMilestone(3, 'done');
         await wait(1000);
@@ -441,7 +464,12 @@ export async function runInstallation() {
         updateProgress(0.65);
 
         log("מתקין את A-Bloq במכשיר...", 'info');
-        await executeAdbCommand(`pm install -r -g "/data/local/tmp/app.apk"`, "התקנת אפליקציה");
+        const installResult = await executeAdbCommand(`pm install -r -g "/data/local/tmp/app.apk"`, "התקנת אפליקציה");
+        
+        // Anti-quiet failure: check if install succeeded
+        if (installResult.toLowerCase().includes('failure') || installResult.toLowerCase().includes('error')) {
+            throw new Error("התקנת האפליקציה נכשלה: " + installResult.trim());
+        }
         isApkInstalled = true;
 
         updateMilestone(4, 'done');
@@ -455,6 +483,20 @@ export async function runInstallation() {
 
         log("מגדיר ניהול מכשיר...", 'info');
         await executeAdbCommand(`dpm set-device-owner ${CONFIG.TARGET_PACKAGE}/${CONFIG.DEVICE_ADMIN}`, "הגדרת מנהל מכשיר");
+
+        // Anti-Quiet-Failure: Deep verify device owner status
+        log("מאמת הגדרת מנהל מכשיר...", 'info');
+        try {
+            const verifyOwner = await executeAdbCommand("dumpsys device_policy", "אימות מנהל מכשיר", true);
+            if (!verifyOwner.includes(CONFIG.TARGET_PACKAGE)) {
+                throw new Error("הגדרת מנהל המכשיר נדחתה על ידי Android. ייתכן שחשבונות שלא הוסרו חוסמים את הפעולה.");
+            }
+        } catch (verifyErr) {
+            if (verifyErr.message.includes("נדחתה על ידי Android")) {
+                throw verifyErr;
+            }
+            console.warn("Device policy verification warning:", verifyErr);
+        }
 
         updateProgress(0.90);
         log("מעניק הרשאות מערכת...", 'info');

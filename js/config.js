@@ -9,6 +9,8 @@ export const CONFIG = {
     DEVICE_ADMIN: ".SecureGuardDeviceAdminReceiver",
     APK_LOCAL_PATH: "apk/normal.apk",
     APK_FETCH_TIMEOUT_MS: 8000,
+    ADB_DEFAULT_TIMEOUT_MS: 15000,
+    ADB_HEARTBEAT_INTERVAL_MS: 4000,
     APK_FALLBACK_URLS: [
         // 1. GitHack CDN (Serves directly from Cloudflare edge with complete CORS support)
         "https://rawcdn.githack.com/cfopuser/a-bloq-installer/main/apk/normal.apk",
@@ -100,10 +102,16 @@ export const ADB_ERRORS = {
     "INSTALL_FAILED_INSUFFICIENT_STORAGE": "אין מספיק מקום פנוי במכשיר.",
     "INSTALL_FAILED_UPDATE_INCOMPATIBLE": "קיימת גרסה קודמת עם חתימה שונה. יש למחוק אותה ידנית.",
     "Permission denied": "אין הרשאה לביצוע הפעולה. וודא שאישרת 'ניפוי באגים' במכשיר.",
-    "device unauthorized": "המכשיר לא מאושר. בדוק את מסך המכשיר ואשר את החיבור.",
-    "not found": "המכשיר התנתק. בדוק את תקינות הכבל.",
-    "there are already some accounts": "שגיאה: נמצאו חשבונות פעילים. חובה להסירם.",
+    "device unauthorized": "המכשיר ממתין לאישור. הדליקו את מסך המכשיר, סמנו 'אפשר תמיד ממחשב זה' ואשרו.",
+    "device offline": "המכשיר לא מקוון. נתקו וחברו מחדש את כבל ה-USB.",
+    "not found": "המכשיר התנתק. בדקו את תקינות כבל ה-USB.",
+    "device not found": "המכשיר לא זוהה. חברו את המכשיר מחדש.",
+    "closed": "ערוץ התקשורת עם המכשיר נסגר.",
+    "there are already some accounts": "שגיאה: נמצאו חשבונות פעילים במכשיר. חובה להסירם לפני ההתקנה.",
     "already a device owner": "שגיאה: כבר קיים מנהל מכשיר (Device Owner). יש לבצע איפוס יצרן.",
     "java.lang.IllegalStateException": "שגיאה קריטית (IllegalStateException). חלה תקלה בעת הגדרת ניהול המכשיר.",
-    "Trying to set the device owner": "שגיאה: הגדרת הבעלים נכשלה. המכשיר אינו 'נקי' מחשבונות."
+    "java.lang.SecurityException": "מערכת Android חסמה את הפקודה מטעמי אבטחה או היעדר הרשאות.",
+    "Trying to set the device owner": "שגיאה: הגדרת הבעלים נכשלה. המכשיר אינו 'נקי' מחשבונות.",
+    "Can't find service": "שירות מערכת באנדרואיד אינו מגיב (יתכן שהמכשיר מופעל מחדש או שהמסך נעול).",
+    "DeadObjectException": "שירות המערכת באנדרואיד קרס במהלך הביצוע."
 };

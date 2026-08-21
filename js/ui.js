@@ -126,6 +126,50 @@ export function showToast(message, icon = 'info') {
     }, 1800);
 }
 
+/**
+ * Display top contextual banner and toast when a device disconnection is detected
+ */
+export function notifyDeviceDisconnected(reason = "המכשיר נותק מהמחשב") {
+    const banner = document.getElementById('device-disconnect-banner');
+    const titleEl = document.getElementById('disconnect-banner-title');
+    const descEl = document.getElementById('disconnect-banner-desc');
+
+    if (banner) {
+        banner.style.display = 'flex';
+        if (titleEl) titleEl.textContent = reason;
+        if (descEl) descEl.textContent = "חיבור ה-USB הופסק. ודאו שהכבל מחובר היטב, המסך פתוח ולחצו 'חבר מחדש'.";
+    }
+
+    showToast("המכשיר נותק מהמחשב", 'link_off');
+
+    // If install is active or on accounts page, disable advance buttons
+    const nextAcc = document.getElementById('btn-next-acc');
+    if (nextAcc && !appState.accountsClean) nextAcc.disabled = true;
+
+    const btnInstall = document.getElementById('btn-install-start');
+    if (btnInstall) btnInstall.disabled = true;
+}
+
+/**
+ * Hide disconnect alert banner when connection is restored
+ */
+export function hideDisconnectAlert() {
+    const banner = document.getElementById('device-disconnect-banner');
+    if (banner) banner.style.display = 'none';
+}
+
+/**
+ * Notify user that a USB device was plugged in
+ */
+export function notifyDevicePluggedIn(deviceName = "מכשיר USB") {
+    showToast(`זוהה חיבור התקן: ${deviceName}`, 'usb');
+    // If disconnect banner is currently showing, update its text to prompt reconnection
+    const descEl = document.getElementById('disconnect-banner-desc');
+    if (descEl) {
+        descEl.textContent = `זוהה חיבור התקן (${deviceName}). לחצו 'חבר מחדש' כדי להמשיך.`;
+    }
+}
+
 export async function copyLogToClipboard() {
     const el = document.getElementById('install-log');
     if (!el || el.innerText.trim() === "") {

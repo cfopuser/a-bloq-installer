@@ -63,6 +63,22 @@
         <!-- ... Content Panel ... -->
         <div class="content-panel">
 
+            <!-- Global Device Disconnected Warning Banner -->
+            <div id="device-disconnect-banner" class="global-rescue-bar disconnect-alert-bar" style="display: none;">
+                <div class="rescue-bar-content">
+                    <span class="material-symbols-rounded rescue-icon" style="color: var(--md-sys-color-error, #F28B82);">link_off</span>
+                    <div class="rescue-text">
+                        <strong id="disconnect-banner-title">המכשיר נותק מהמחשב</strong>
+                        <span id="disconnect-banner-desc">חיבור ה-USB הופסק. ודאו שהכבל מחובר כראוי והמסך אינו נעול.</span>
+                    </div>
+                </div>
+                <div class="rescue-actions">
+                    <button class="btn btn-tonal btn-rescue-action" onclick="connectAdb()">
+                        <span class="material-symbols-rounded">refresh</span> חבר מחדש
+                    </button>
+                </div>
+            </div>
+
             <!-- Global Contextual Emergency Restore Banner -->
             <div id="emergency-restore-box" class="global-rescue-bar" style="display: none;">
                 <div class="rescue-bar-content">
