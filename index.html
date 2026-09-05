@@ -312,9 +312,9 @@
                         <p class="install-subtitle">התקנת A-Bloq</p>
                     </div>
                     <button class="btn btn-tonal btn-console-trigger" type="button" onclick="openConsoleModal()"
-                        title="פתח יומן פקודות טכני">
+                        title="פתח לוגים">
                         <span class="material-symbols-rounded">terminal</span>
-                        <span>יומן פקודות</span>
+                        <span>לוגים</span>
                         <span id="console-badge-count" class="console-count-badge">0</span>
                     </button>
                 </div>
@@ -621,7 +621,7 @@
             <div class="modal-body">
                 <p class="modal-lead">
                     מצב זה מאפשר להגדיר את A-Bloq מבלי למחוק את החשבונות שלכם. שירותי האימות של החשבונות יושבתו באופן
-                    זמני בלבד דרך פקודות ADB, וישוחזרו אוטומטית בסיום ההתקנה.
+                    זמני בלבד דרך ADB, וישוחזרו אוטומטית בסיום ההתקנה.
                 </p>
                 <div class="modal-alert-box">
                     <span class="material-symbols-rounded">security</span>
@@ -738,7 +738,7 @@
                 <div class="console-title-wrap">
                     <div class="console-title-text">
                         <span class="material-symbols-rounded console-header-icon">terminal</span>
-                        <strong>יומן פקודות מערכת ו-ADB</strong>
+                       <strong>לוגים</strong>
                     </div>
                 </div>
                 <div class="console-actions">
@@ -762,7 +762,7 @@
                     <span id="console-conn-status">ADB פעיל ומחובר</span>
                 </div>
                 <div class="console-filter-hint">
-                    <span id="console-line-summary">0 שורות יומן</span>
+                    <span id="console-line-summary">0 שורות לוג</span>
                 </div>
             </div>
 
@@ -772,8 +772,7 @@
 
             <div class="console-modal-footer">
                 <span class="console-footer-note">
-                    <span class="material-symbols-rounded">info</span> מעקב שקוף אחר פקודות ADB, תהליכי התקנה ושגיאות
-                    מערכת בזמן אמת.
+                    <span class="material-symbols-rounded">info</span> מעקב אחר adb ושגיאות.
                 </span>
                 <button class="btn btn-tonal" type="button" onclick="closeConsoleModal()"
                     style="height: 36px; padding: 0 20px;">סגור</button>
