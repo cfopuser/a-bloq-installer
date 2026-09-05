@@ -420,7 +420,7 @@ export function setPhonePanelState(mode, data = {}) {
         if (badgeEl) badgeEl.className = 'phone-guide-badge badge-error';
         if (badgeIconEl) badgeIconEl.textContent = 'error';
         if (titleEl) titleEl.textContent = 'תקלה בתהליך ההתקנה';
-        if (infoTextEl) infoTextEl.textContent = data.desc || 'חלה שגיאה. בדקו את יומן הפקודות או נסו שוב';
+        if (infoTextEl) infoTextEl.textContent = data.desc || 'חלה שגיאה. בדקו את הלוגים או נסו שוב';
     }
 }
 
